@@ -355,20 +355,31 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
+    .card-back img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      display: block;
+    }
+    /* 画像なし時のフォールバック */
     .card-back::before {
       content: '';
       position: absolute;
       inset: 4px;
       border: 1px solid rgba(107,64,16,0.7);
       border-radius: 3px;
+      pointer-events: none;
     }
-    .card-back::after {
+    .card-back.no-img::after {
       content: '花';
       font-size: 2.2em;
       color: #7a4a18;
       opacity: 0.65;
     }
+    .card-back img.hidden { display: none; }
 
     /* カード表面 */
     .card-face {
@@ -377,9 +388,30 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-start;
+      padding: 0;
+      overflow: hidden;
+    }
+    /* 画像モード：画像が全面に表示 */
+    .card-face img.card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      display: block;
+    }
+    .card-face img.card-img.hidden { display: none; }
+    /* 画像なし時のフォールバックレイアウト */
+    .card-face .card-text-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: space-between;
       padding: 5px 4px;
+      width: 100%;
+      height: 100%;
     }
+    .card-face .card-text-fallback.hidden { display: none; }
     .card-face .c-month {
       font-size: 0.7em;
       font-weight: bold;
@@ -812,6 +844,10 @@
   <div class="home-bottom">
     <button class="btn-sm" id="home-yaku-btn">役一覧を見る</button>
     <p class="home-version">v1.1.0 — 花札神経衰弱</p>
+    <p style="margin-top:10px;font-size:0.6em;color:#7a5a30;line-height:1.6;">
+      Card images: <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards" target="_blank" rel="noopener" style="color:#a07840;">Louie Mantia / すけじょ</a>
+      — <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener" style="color:#a07840;">CC BY-SA 4.0</a>
+    </p>
   </div>
 </div>
 
@@ -922,6 +958,10 @@
     <button class="btn" id="replay-btn">もう一度遊ぶ</button>
     <button class="btn" id="home-from-result" style="background:#2a1800;">ホームへ</button>
   </div>
+  <p style="margin-top:24px;font-size:0.62em;color:#7a5a30;line-height:1.6;text-align:center;">
+    Card images: <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards" target="_blank" rel="noopener" style="color:#a07840;">Hanafuda cards by Louie Mantia / すけじょ</a>
+    — <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener" style="color:#a07840;">CC BY-SA 4.0</a>
+  </p>
 </div>
 
 
@@ -1212,6 +1252,8 @@ function renderBoard() {
     // 裏面
     const back = document.createElement('div');
     back.className = 'card-back';
+    back.innerHTML = `<img src="assets/cards/back.png"
+      onerror="this.classList.add('hidden');this.parentElement.classList.add('no-img')">`;
 
     // 表面
     const typeClass = {
@@ -1230,10 +1272,15 @@ function renderBoard() {
     }[card.type];
     const face = document.createElement('div');
     face.className = `card-face ${typeClass}`;
+    const idPad = String(card.id).padStart(2, '0');
     face.innerHTML = `
-      <div class="c-month">${card.month}月<br>${card.flower}</div>
-      <div class="c-name">${card.name}</div>
-      <div class="c-badge">${badgeText}</div>
+      <img class="card-img" src="assets/cards/${idPad}.png"
+        onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+      <div class="card-text-fallback hidden">
+        <div class="c-month">${card.month}月<br>${card.flower}</div>
+        <div class="c-name">${card.name}</div>
+        <div class="c-badge">${badgeText}</div>
+      </div>
     `;
 
     inner.appendChild(back);
