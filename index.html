@@ -813,6 +813,197 @@
       .card-face .c-name  { display: none; }
       .card-face .c-flower { font-size: 1em; }
     }
+
+    /* ===========================
+       11. NPC難易度・共通UI
+    =========================== */
+    .mode-sub-label {
+      font-size: 0.8em; color: var(--text-muted); letter-spacing: 0.06em;
+      width: 100%; max-width: 360px; padding-top: 2px;
+    }
+    .difficulty-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 8px; width: 100%; max-width: 360px;
+    }
+    .difficulty-btn {
+      padding: 9px 4px; font-family: inherit; font-size: 0.85em;
+      background: var(--panel); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: 6px;
+      cursor: pointer; letter-spacing: 0.04em; transition: all 0.2s;
+    }
+    .difficulty-btn:hover { border-color: var(--gold); color: var(--text); }
+    .difficulty-btn.sel {
+      border-color: var(--gold); background: rgba(212,168,67,0.18);
+      color: var(--gold-light);
+    }
+
+    /* ===========================
+       12. こいこいセットアップ
+    =========================== */
+    #koikoi-setup {
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 16px; padding: 24px 16px;
+    }
+    #koikoi-setup.active { display: flex; }
+
+    /* ===========================
+       13. こいこいゲーム画面
+    =========================== */
+    #koikoi-game {
+      display: none; flex-direction: column;
+      min-height: 100vh; padding: 6px 8px 14px; gap: 5px;
+    }
+    #koikoi-game.active { display: flex; }
+    .kk-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 2px 2px 5px; border-bottom: 1px solid var(--border); gap: 6px;
+    }
+    .kk-round-badge { font-size: 0.82em; color: var(--text-muted); letter-spacing: 0.05em; }
+    .kk-scores { display: flex; gap: 10px; }
+    .kk-score-chip {
+      font-size: 0.78em; color: var(--text-muted);
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 2px 9px;
+    }
+    .kk-score-chip.cur { border-color: var(--gold); color: var(--gold-light); }
+    .kk-area {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 8px;
+    }
+    .kk-area-label { font-size: 0.7em; color: var(--text-muted); letter-spacing: 0.07em; margin-bottom: 3px; }
+    .kk-hand-row {
+      display: flex; gap: 3px; flex-wrap: wrap;
+      min-height: 68px; align-items: flex-start;
+    }
+    .kk-field-area {
+      background: rgba(20,14,0,0.7); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 8px;
+    }
+    .kk-middle { display: flex; gap: 8px; align-items: flex-start; }
+    .kk-field-cards {
+      flex: 1; display: flex; gap: 3px; flex-wrap: wrap;
+      min-height: 68px; align-items: flex-start;
+    }
+    .kk-deck-col {
+      display: flex; flex-direction: column; gap: 5px; align-items: center;
+    }
+    .kk-deck-pile {
+      width: 50px; height: 72px;
+      background: linear-gradient(145deg, #2a1400, #4e2c00);
+      border: 2px solid #6b4010; border-radius: 5px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px;
+    }
+    .kk-deck-count { font-size: 1.05em; color: var(--gold-light); font-weight: bold; }
+    .kk-deck-lbl { font-size: 0.6em; color: #7a5a30; }
+    .kk-drawn-slot {
+      width: 50px; height: 72px; border: 1px dashed #5c3a00;
+      border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    }
+    /* こいこいカード */
+    .kk-card {
+      width: 50px; height: 72px; border-radius: 5px; overflow: hidden;
+      cursor: pointer; flex-shrink: 0; border: 2px solid #444;
+      position: relative; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+    }
+    .kk-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .kk-fallback {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 0.55em; text-align: center; gap: 1px; padding: 2px;
+    }
+    .kk-card:not(.face-down):not(.no-interact):hover {
+      transform: translateY(-4px); box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .kk-card.selected {
+      border-color: var(--gold) !important;
+      box-shadow: 0 0 14px rgba(212,168,67,0.9) !important;
+      transform: translateY(-8px) !important;
+    }
+    .kk-card.matchable { border-color: #60e060 !important; animation: kk-pulse 0.9s ease infinite; }
+    .kk-card.drawn-hi  { border-color: #6080ff !important; box-shadow: 0 0 12px rgba(96,128,255,0.7); }
+    .kk-card.face-down {
+      background: linear-gradient(145deg, #2a1400, #4e2c00);
+      border-color: #6b4010; cursor: default;
+    }
+    .kk-card.face-down:hover { transform: none; box-shadow: none; }
+    .kk-card.gone { display: none; }
+    .kk-card.match-flash { animation: kk-glow 0.55s ease; }
+    @keyframes kk-pulse {
+      0%,100% { box-shadow: 0 0 5px rgba(96,224,96,0.4); }
+      50%      { box-shadow: 0 0 14px rgba(96,224,96,0.9); }
+    }
+    @keyframes kk-glow {
+      0%   { box-shadow: 0 0 0 rgba(255,215,0,0); }
+      35%  { box-shadow: 0 0 18px rgba(255,215,0,1); }
+      100% { box-shadow: 0 0 5px rgba(255,215,0,0.2); }
+    }
+    .kk-yaku-bar { font-size: 0.7em; color: var(--text-muted); margin-top: 3px; min-height: 16px; }
+    .kk-yaku-bar em { color: var(--gold-light); font-style: normal; }
+    .kk-status-bar {
+      text-align: center; font-size: 0.92em; color: var(--gold-light);
+      letter-spacing: 0.05em; min-height: 24px; padding: 2px 4px;
+    }
+
+    /* ===========================
+       14. こいこいダイアログ
+    =========================== */
+    #koikoi-choice {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.83);
+      backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+      display: none; align-items: center; justify-content: center; z-index: 300;
+    }
+    #koikoi-choice.active { display: flex; }
+    .kk-choice-box {
+      background: #180c00; border: 2px solid var(--gold); border-radius: 14px;
+      padding: 26px 28px; max-width: 360px; width: 92%; text-align: center;
+      animation: fadeUp 0.3s ease; display: flex; flex-direction: column; gap: 12px;
+    }
+    .kk-choice-title { font-size: 1em; color: var(--gold); letter-spacing: 0.1em; }
+    .kk-choice-yaku  { font-size: 0.88em; color: var(--gold-light); line-height: 1.85; }
+    .kk-choice-pts   { font-size: 2em; color: var(--gold); font-weight: bold; }
+    .kk-choice-btns  { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .kk-choice-btns .btn { padding: 10px 20px; font-size: 0.92em; }
+    .btn-koikoi { background: #6b0000 !important; border-color: #cc3333 !important; color: #ffbbbb !important; }
+    .btn-koikoi:hover { background: #8b0000 !important; }
+
+    /* ===========================
+       15. ラウンド結果
+    =========================== */
+    #kk-round-result {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.86);
+      backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+      display: none; align-items: center; justify-content: center; z-index: 300;
+    }
+    #kk-round-result.active { display: flex; }
+    .kk-rr-box {
+      background: #180c00; border: 2px solid var(--gold); border-radius: 14px;
+      padding: 26px 30px; max-width: 380px; width: 92%; text-align: center;
+      display: flex; flex-direction: column; gap: 12px; animation: fadeUp 0.35s ease;
+    }
+    .kk-rr-label   { font-size: 0.85em; color: var(--text-muted); letter-spacing: 0.07em; }
+    .kk-rr-winner  { font-size: 1.4em; color: var(--gold-light); font-weight: bold; }
+    .kk-rr-detail  { font-size: 0.84em; color: var(--text-muted); line-height: 1.9; }
+    .kk-rr-totals  { display: flex; justify-content: center; gap: 20px; font-size: 0.9em; }
+    .kk-rr-tot     { color: var(--gold-light); }
+    .kk-rr-history { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+    .kk-rr-dot     { width: 11px; height: 11px; border-radius: 50%; background: #333; border: 1px solid #555; }
+    .kk-rr-dot.win0 { background: var(--gold); border-color: var(--gold); }
+    .kk-rr-dot.win1 { background: #4a8ad4; border-color: #6aaaf4; }
+    .kk-rr-dot.draw { background: #666; border-color: #888; }
+
+    /* ===========================
+       16. こいこい最終結果
+    =========================== */
+    #koikoi-result {
+      display: none; flex-direction: column; align-items: center;
+      padding: 30px 20px 40px; min-height: 100vh;
+    }
+    #koikoi-result.active { display: flex; }
+    #koikoi-result h2 {
+      font-size: 2em; color: var(--gold); margin-bottom: 6px;
+      text-shadow: 0 0 16px rgba(212,168,67,0.55); letter-spacing: 0.08em;
+    }
   </style>
 </head>
 <body>
@@ -825,12 +1016,12 @@
   <p class="home-subtitle">Hanafuda Card Game</p>
 
   <div class="mode-grid">
-    <!-- こいこい（準備中） -->
-    <div class="mode-card disabled" id="mode-koikoi">
+    <!-- こいこい -->
+    <div class="mode-card" id="mode-koikoi">
       <div class="mc-icon">🎴</div>
       <div class="mc-title">こいこい</div>
       <div class="mc-desc">伝統的な花札の対戦ルール。手札と場を合わせて役を作れ。</div>
-      <span class="mc-badge soon">準備中</span>
+      <span class="mc-badge">NPC対応</span>
     </div>
     <!-- 神経衰弱 -->
     <div class="mode-card" id="mode-memory">
@@ -881,6 +1072,21 @@
 
   <div class="form-group">
     <div class="form-row">
+      <label>対戦形式</label>
+      <select id="mem-play-mode">
+        <option value="local">ローカル対戦</option>
+        <option value="npc">NPC対戦</option>
+      </select>
+    </div>
+    <div id="mem-npc-rows" style="display:none">
+      <div class="mode-sub-label">NPC難易度</div>
+      <div class="difficulty-grid" id="mem-diff-grid">
+        <button class="difficulty-btn" data-diff="random">ランダム</button>
+        <button class="difficulty-btn sel" data-diff="normal">普通</button>
+        <button class="difficulty-btn" data-diff="strong">強い</button>
+      </div>
+    </div>
+    <div class="form-row" id="mem-player-count-row">
       <label>プレイヤー人数</label>
       <select id="player-count">
         <option value="2">2人</option>
@@ -915,6 +1121,136 @@
   <div id="player-bar"></div>
   <div id="status">準備中...</div>
   <div id="board"></div>
+</div>
+
+<!-- ========================================================
+     こいこいセットアップ画面
+======================================================== -->
+<div id="koikoi-setup">
+  <button class="btn-sm" id="kk-back-home" style="align-self:flex-start;margin-bottom:-4px;">← ホームへ</button>
+  <h1 style="font-size:2.4em;color:var(--gold);text-shadow:0 0 28px rgba(212,168,67,0.55);letter-spacing:0.12em;">こいこい</h1>
+  <p style="color:var(--text-muted);font-size:0.9em;">伝統的な花札の対戦ゲーム</p>
+  <div class="form-group">
+    <div class="form-row">
+      <label>あなたの名前</label>
+      <input type="text" id="kk-p1-name" value="プレイヤー1">
+    </div>
+    <div class="form-row">
+      <label>対戦相手</label>
+      <select id="kk-opponent-type">
+        <option value="npc">NPC対戦</option>
+        <option value="local">ローカル2人</option>
+      </select>
+    </div>
+    <div class="form-row" id="kk-p2-name-row" style="display:none">
+      <label>プレイヤー2</label>
+      <input type="text" id="kk-p2-name" value="プレイヤー2">
+    </div>
+    <div id="kk-npc-diff-row">
+      <div class="mode-sub-label">NPC難易度</div>
+      <div class="difficulty-grid" id="kk-diff-grid">
+        <button class="difficulty-btn" data-diff="random">ランダム</button>
+        <button class="difficulty-btn sel" data-diff="normal">普通</button>
+        <button class="difficulty-btn" data-diff="strong">強い</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>対戦期間</label>
+      <select id="kk-period">
+        <option value="3">3ヶ月</option>
+        <option value="6">6ヶ月</option>
+        <option value="9">9ヶ月</option>
+        <option value="12" selected>12ヶ月</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn" id="kk-start-btn">ゲーム開始</button>
+  <div class="rule-box">
+    <div class="rb-title">遊び方</div>
+    手札8枚・場の札8枚・山札24枚でスタート。<br>
+    手札から1枚出して<strong style="color:var(--gold)">同じ月の場の札</strong>と合わせる→山札をめくって同じく合わせる。<br>
+    役が完成したら<strong style="color:var(--gold)">「こいこい」で継続、「勝負」で得点確定</strong>。<br>
+    こいこい宣言後に勝てば点数2倍！
+  </div>
+</div>
+
+<!-- ========================================================
+     こいこいゲーム画面
+======================================================== -->
+<div id="koikoi-game">
+  <!-- ヘッダー -->
+  <div class="kk-header">
+    <button class="btn-sm" id="kk-yaku-btn">役一覧</button>
+    <div class="kk-round-badge">ラウンド <span id="kk-round-num">1</span> / <span id="kk-round-total">12</span></div>
+    <div class="kk-scores">
+      <div class="kk-score-chip cur" id="kk-score-0">P1: 0pt</div>
+      <div class="kk-score-chip" id="kk-score-1">P2: 0pt</div>
+    </div>
+  </div>
+  <!-- 相手エリア -->
+  <div class="kk-area">
+    <div class="kk-area-label" id="kk-opp-label">相手 手札</div>
+    <div class="kk-hand-row" id="kk-opp-hand"></div>
+    <div class="kk-yaku-bar" id="kk-yaku-top">役: なし</div>
+  </div>
+  <!-- 場エリア -->
+  <div class="kk-field-area">
+    <div class="kk-area-label">場の札</div>
+    <div class="kk-middle">
+      <div class="kk-field-cards" id="kk-field-cards"></div>
+      <div class="kk-deck-col">
+        <div class="kk-deck-pile">
+          <div class="kk-deck-count" id="kk-deck-count">24</div>
+          <div class="kk-deck-lbl">山札</div>
+        </div>
+        <div class="kk-drawn-slot" id="kk-drawn-slot"></div>
+      </div>
+    </div>
+  </div>
+  <!-- 自分エリア -->
+  <div class="kk-area">
+    <div class="kk-yaku-bar" id="kk-yaku-bottom">役: なし</div>
+    <div class="kk-hand-row" id="kk-player-hand"></div>
+    <div class="kk-area-label" id="kk-player-label">あなた 手札</div>
+  </div>
+  <!-- ステータス -->
+  <div class="kk-status-bar" id="kk-status">準備中...</div>
+</div>
+
+<!-- こいこい/勝負ダイアログ -->
+<div id="koikoi-choice">
+  <div class="kk-choice-box">
+    <div class="kk-choice-title">🎴 役が完成！</div>
+    <div class="kk-choice-yaku" id="kk-choice-yaku-list"></div>
+    <div class="kk-choice-pts"><span id="kk-choice-pts">0</span> 点</div>
+    <div class="kk-choice-btns">
+      <button class="btn btn-koikoi" id="kk-btn-koikoi">こいこい（続ける）</button>
+      <button class="btn" id="kk-btn-shobu">勝負！</button>
+    </div>
+  </div>
+</div>
+
+<!-- ラウンド結果 -->
+<div id="kk-round-result">
+  <div class="kk-rr-box">
+    <div class="kk-rr-label" id="kk-rr-title">ラウンド 1 終了</div>
+    <div class="kk-rr-winner" id="kk-rr-winner"></div>
+    <div class="kk-rr-detail" id="kk-rr-detail"></div>
+    <div class="kk-rr-totals" id="kk-rr-totals"></div>
+    <div class="kk-rr-history" id="kk-rr-history"></div>
+    <button class="btn" id="kk-next-round-btn">次のラウンドへ</button>
+  </div>
+</div>
+
+<!-- こいこい最終結果 -->
+<div id="koikoi-result">
+  <h2>ゲーム終了！</h2>
+  <p class="result-sub">全ラウンドの合計点</p>
+  <div class="result-list" id="kk-final-list"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+    <button class="btn" id="kk-replay-btn">もう一度遊ぶ</button>
+    <button class="btn" id="kk-home-btn" style="background:#2a1800;">ホームへ</button>
+  </div>
 </div>
 
 <!-- ボーナスターントースト -->
@@ -1110,12 +1446,15 @@ function calculateYaku(collectedIds) {
    [STATE] ゲーム状態
 ================================================================ */
 const state = {
-  players:       [],   // { name, collected: [] }
+  players:       [],
   currentPlayer: 0,
-  board:         [],   // { cardId, faceUp, collected }
-  flipped:       [],   // 今ターンめくったboard index（最大2）
+  board:         [],
+  flipped:       [],
   animating:     false,
 };
+
+// NPC状態（神経衰弱用）— startGame より前に定義（本体は下部の NPCモジュールで使用）
+const memNpc = { enabled: false, difficulty: 'normal', memory: new Map() };
 
 /* ================================================================
    [UTIL]
@@ -1148,9 +1487,11 @@ const remainEl  = document.getElementById('remain-count');
    [HOME] ホーム画面ナビゲーション
 ================================================================ */
 function showHome() {
-  resultEl.classList.remove('active');
-  setupEl.classList.remove('active');
-  gameEl.classList.remove('active');
+  [resultEl, setupEl, gameEl,
+   document.getElementById('koikoi-setup'),
+   document.getElementById('koikoi-game'),
+   document.getElementById('koikoi-result')
+  ].forEach(el => el && el.classList.remove('active'));
   homeEl.classList.add('active');
 }
 
@@ -1159,6 +1500,12 @@ document.getElementById('mode-memory').addEventListener('click', () => {
   homeEl.classList.remove('active');
   setupEl.classList.add('active');
   updateNameInputs();
+});
+
+// こいこいモードへ
+document.getElementById('mode-koikoi').addEventListener('click', () => {
+  homeEl.classList.remove('active');
+  document.getElementById('koikoi-setup').classList.add('active');
 });
 
 // セットアップ → ホームへ戻る
@@ -1177,19 +1524,39 @@ document.getElementById('home-yaku-btn').addEventListener('click', () => {
    [SETUP] プレイヤー名入力
 ================================================================ */
 function updateNameInputs() {
-  const n = parseInt(countSel.value);
+  const isNpc = document.getElementById('mem-play-mode').value === 'npc';
+  const n = isNpc ? 1 : parseInt(countSel.value);
   nameDiv.innerHTML = '';
+  const labels = isNpc ? ['あなたの名前'] : null;
   for (let i = 0; i < n; i++) {
     const row = document.createElement('div');
     row.className = 'form-row';
+    const lbl = labels ? labels[i] : `プレイヤー${i + 1}`;
     row.innerHTML = `
-      <label>プレイヤー${i + 1}</label>
-      <input type="text" id="pname${i}" value="プレイヤー${i + 1}" placeholder="名前を入力">
+      <label>${lbl}</label>
+      <input type="text" id="pname${i}" value="${labels ? 'プレイヤー1' : `プレイヤー${i + 1}`}" placeholder="名前を入力">
     `;
     nameDiv.appendChild(row);
   }
 }
 countSel.addEventListener('change', updateNameInputs);
+
+// NPC モード切替
+document.getElementById('mem-play-mode').addEventListener('change', function() {
+  const isNpc = this.value === 'npc';
+  document.getElementById('mem-npc-rows').style.display      = isNpc ? 'block' : 'none';
+  document.getElementById('mem-player-count-row').style.display = isNpc ? 'none' : '';
+  updateNameInputs();
+});
+
+// NPC難易度ボタン（神経衰弱）
+document.querySelectorAll('#mem-diff-grid .difficulty-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mem-diff-grid .difficulty-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+  });
+});
+
 updateNameInputs();
 
 /* ================================================================
@@ -1198,11 +1565,28 @@ updateNameInputs();
 document.getElementById('start-btn').addEventListener('click', startGame);
 
 async function startGame() {
-  const n = parseInt(countSel.value);
+  const isNpc = document.getElementById('mem-play-mode').value === 'npc';
+  const n = isNpc ? 2 : parseInt(countSel.value);
   state.players = [];
-  for (let i = 0; i < n; i++) {
-    const el = document.getElementById(`pname${i}`);
-    state.players.push({ name: (el && el.value.trim()) || `プレイヤー${i + 1}`, collected: [] });
+  // プレイヤー0 = 人間
+  const p0el = document.getElementById('pname0');
+  state.players.push({ name: (p0el && p0el.value.trim()) || 'プレイヤー1', collected: [] });
+  if (isNpc) {
+    // NPC の難易度取得
+    let diff = 'normal';
+    document.querySelectorAll('#mem-diff-grid .difficulty-btn').forEach(b => {
+      if (b.classList.contains('sel')) diff = b.dataset.diff;
+    });
+    memNpc.enabled    = true;
+    memNpc.difficulty = diff;
+    memNpc.memory     = new Map();
+    state.players.push({ name: `NPC（${diff === 'random' ? 'ランダム' : diff === 'normal' ? '普通' : '強い'}）`, collected: [] });
+  } else {
+    memNpc.enabled = false;
+    for (let i = 1; i < n; i++) {
+      const el = document.getElementById(`pname${i}`);
+      state.players.push({ name: (el && el.value.trim()) || `プレイヤー${i + 1}`, collected: [] });
+    }
   }
   state.currentPlayer = 0;
   state.flipped       = [];
@@ -1226,9 +1610,12 @@ async function startGame() {
   await sleep(900);
 
   // 最初のプレイヤーのターンオーバーレイ
-  await showTurnOverlay(state.currentPlayer);
+  if (!memNpc.enabled || state.currentPlayer !== 1) {
+    await showTurnOverlay(state.currentPlayer);
+  }
   setStatus(`${state.players[state.currentPlayer].name} のターンです`);
   state.animating = false;
+  checkNpcTurn();
 }
 
 /* ================================================================
@@ -1329,6 +1716,7 @@ async function onCardClick(idx) {
   slot.faceUp = true;
   state.flipped.push(idx);
   flipCardDOM(idx, true);
+  memNpcSeeCard(idx); // NPC が見たカードを記憶
 
   if (state.flipped.length < 2) return;
 
@@ -1370,6 +1758,7 @@ async function onCardClick(idx) {
     await showBonusToast();
     setStatus(`${state.players[state.currentPlayer].name} もう1ターンです！`);
     state.animating = false;
+    checkNpcTurn();
 
   } else {
     // ════ ミス ════
@@ -1386,6 +1775,7 @@ async function onCardClick(idx) {
     state.flipped = [];
     await advanceTurn();
     state.animating = false;
+    checkNpcTurn();
   }
 }
 
@@ -1431,8 +1821,18 @@ function shakeCards(i1, i2) {
 async function advanceTurn() {
   state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
   renderPlayerBar();
-  await showTurnOverlay(state.currentPlayer);
-  setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+  if (memNpc.enabled && state.currentPlayer === 1) {
+    setStatus(`${state.players[1].name} のターン...`);
+  } else {
+    await showTurnOverlay(state.currentPlayer);
+    setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+  }
+}
+
+function checkNpcTurn() {
+  if (memNpc.enabled && state.currentPlayer === 1 && !state.animating) {
+    setTimeout(memNpcTurn, 400);
+  }
 }
 
 /* ================================================================
@@ -1572,6 +1972,659 @@ document.getElementById('replay-btn').addEventListener('click', () => {
   setupEl.classList.add('active');
   updateNameInputs();
 });
+
+/* ================================================================
+   [NPC] 神経衰弱 NPC モジュール
+================================================================ */
+function memNpcSeeCard(boardIdx) {
+  if (!memNpc.enabled) return;
+  const cardId = state.board[boardIdx].cardId;
+  if (memNpc.difficulty === 'strong') {
+    memNpc.memory.set(boardIdx, cardId);
+  } else if (memNpc.difficulty === 'normal') {
+    if (Math.random() < 0.65) memNpc.memory.set(boardIdx, cardId);
+  }
+  // random: 記憶しない
+}
+
+function memNpcFindKnownPairs(available) {
+  const known = [...memNpc.memory.entries()].filter(([i]) => available.includes(i));
+  const pairs = [];
+  for (let i = 0; i < known.length; i++) {
+    for (let j = i + 1; j < known.length; j++) {
+      if (CARDS[known[i][1]].month === CARDS[known[j][1]].month)
+        pairs.push([known[i][0], known[j][0]]);
+    }
+  }
+  return pairs;
+}
+
+async function memNpcTurn() {
+  if (!memNpc.enabled || state.currentPlayer !== 1 || state.animating) return;
+  state.animating = true;
+  setStatus(`${state.players[1].name} が考えています...`);
+  await sleep(800);
+
+  const available = state.board.map((_,i)=>i).filter(i => !state.board[i].faceUp && !state.board[i].collected);
+  if (available.length < 2) { state.animating = false; return; }
+
+  let idx1, idx2;
+
+  if (memNpc.difficulty === 'random') {
+    const sh = shuffle([...available]);
+    [idx1, idx2] = [sh[0], sh[1]];
+  } else {
+    const pairs = memNpcFindKnownPairs(available);
+    if (pairs.length > 0) {
+      [idx1, idx2] = pairs[0];
+    } else {
+      const unknown = available.filter(i => !memNpc.memory.has(i));
+      idx1 = (unknown.length > 0 ? shuffle([...unknown]) : shuffle([...available]))[0];
+      idx2 = null;
+    }
+  }
+
+  // 1枚目めくる
+  state.board[idx1].faceUp = true;
+  state.flipped.push(idx1);
+  flipCardDOM(idx1, true);
+  memNpcSeeCard(idx1);
+  await sleep(700);
+
+  // 2枚目を決定（1枚目を見た後に判断）
+  if (idx2 === null) {
+    const rev = CARDS[state.board[idx1].cardId];
+    const avail2 = available.filter(i => i !== idx1);
+    const matchMem = avail2.find(i => memNpc.memory.has(i) && CARDS[memNpc.memory.get(i)].month === rev.month);
+    if (matchMem !== undefined) {
+      idx2 = matchMem;
+    } else {
+      const unk2 = avail2.filter(i => !memNpc.memory.has(i));
+      idx2 = shuffle(unk2.length > 0 ? unk2 : avail2)[0];
+    }
+  }
+
+  // 2枚目めくる
+  state.board[idx2].faceUp = true;
+  state.flipped.push(idx2);
+  flipCardDOM(idx2, true);
+  memNpcSeeCard(idx2);
+  await sleep(700);
+
+  const c1 = CARDS[state.board[idx1].cardId];
+  const c2 = CARDS[state.board[idx2].cardId];
+
+  if (c1.month === c2.month) {
+    setStatus(`${state.players[1].name} が ${c1.month}月（${c1.flower}）を取得！`);
+    animateMatch(idx1, idx2);
+    await sleep(700);
+    state.board[idx1].collected = true; state.board[idx2].collected = true;
+    state.board[idx1].faceUp    = false; state.board[idx2].faceUp    = false;
+    state.players[1].collected.push(c1.id, c2.id);
+    memNpc.memory.delete(idx1); memNpc.memory.delete(idx2);
+    hideCardDOM(idx1); hideCardDOM(idx2);
+    renderPlayerBar(); updateRemaining();
+    state.flipped = [];
+    if (state.board.every(s => s.collected)) { await sleep(300); showResult(); return; }
+    await showBonusToast();
+    setStatus(`${state.players[1].name} ボーナスターン！`);
+    state.animating = false;
+    checkNpcTurn();
+  } else {
+    setStatus(`${state.players[1].name}... 残念`);
+    shakeCards(idx1, idx2);
+    await sleep(920);
+    state.board[idx1].faceUp = false; state.board[idx2].faceUp = false;
+    flipCardDOM(idx1, false); flipCardDOM(idx2, false);
+    await sleep(460);
+    state.flipped = [];
+    await advanceTurn();
+    state.animating = false;
+    checkNpcTurn();
+  }
+}
+
+/* ================================================================
+   [KK] こいこいゲーム — 状態
+================================================================ */
+const kkState = {
+  p: [
+    { name:'P1', hand:[], collected:[], totalScore:0, koikoi:false },
+    { name:'P2', hand:[], collected:[], totalScore:0, koikoi:false },
+  ],
+  field: [], deck: [],
+  round: 1, totalRounds: 12,
+  cur: 0,
+  phase: 'idle',
+  selHand: null, drawnCard: null, matchCands: [],
+  prevYaku: [[], []],
+  koikoiBy: null,
+  history: [],
+  animating: false,
+  npc: false, npcDiff: 'normal', npcIdx: 1,
+};
+
+/* ================================================================
+   [KK] ユーティリティ
+================================================================ */
+function kkImgSrc(id)  { return `assets/cards/${String(id).padStart(2,'0')}.png`; }
+function kkBg(type) {
+  return ({hikari:'linear-gradient(155deg,#5a3800,#c8880a)',tane:'linear-gradient(155deg,#0d2d0d,#1e5c1e)',
+    tanzaku_red:'linear-gradient(155deg,#2d0505,#6e1010)',tanzaku_blue:'linear-gradient(155deg,#050520,#101060)',
+    kasu:'linear-gradient(155deg,#1a1810,#3a3520)'})[type]||'#333';
+}
+
+function kkCardEl(cardId, extra='', onClick=null) {
+  const el = document.createElement('div');
+  el.className = 'kk-card ' + extra;
+  el.dataset.cardid = cardId;
+  const c = CARDS[cardId];
+  const img = document.createElement('img');
+  img.src = kkImgSrc(cardId);
+  const fb = document.createElement('div');
+  fb.className = 'kk-fallback';
+  fb.style.background = kkBg(c.type);
+  fb.style.display = 'none';
+  fb.innerHTML = `<div style="font-size:1.2em">${c.flower}</div><div>${c.name}</div>`;
+  img.onerror = () => { img.style.display='none'; fb.style.display='flex'; };
+  el.appendChild(img);
+  el.appendChild(fb);
+  if (onClick) el.addEventListener('click', onClick);
+  return el;
+}
+
+function kkFaceDown() {
+  const el = document.createElement('div');
+  el.className = 'kk-card face-down';
+  return el;
+}
+
+function kkSetStatus(msg) { document.getElementById('kk-status').textContent = msg; }
+
+/* ================================================================
+   [KK] セットアップ画面 イベント
+================================================================ */
+document.getElementById('kk-back-home').addEventListener('click', showHome);
+document.getElementById('kk-replay-btn').addEventListener('click', () => {
+  document.getElementById('koikoi-result').classList.remove('active');
+  document.getElementById('koikoi-setup').classList.add('active');
+});
+document.getElementById('kk-home-btn').addEventListener('click', showHome);
+document.getElementById('kk-yaku-btn').addEventListener('click', () => {
+  buildYakuModal();
+  document.getElementById('yaku-modal').classList.add('active');
+});
+
+// こいこい難易度ボタン
+document.querySelectorAll('#kk-diff-grid .difficulty-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#kk-diff-grid .difficulty-btn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+  });
+});
+
+// 対戦相手切替
+document.getElementById('kk-opponent-type').addEventListener('change', function() {
+  const isNpc = this.value === 'npc';
+  document.getElementById('kk-p2-name-row').style.display  = isNpc ? 'none' : '';
+  document.getElementById('kk-npc-diff-row').style.display = isNpc ? 'block' : 'none';
+});
+
+document.getElementById('kk-start-btn').addEventListener('click', kkStartGame);
+
+/* ================================================================
+   [KK] ゲーム開始
+================================================================ */
+function kkStartGame() {
+  const p1name  = document.getElementById('kk-p1-name').value.trim() || 'プレイヤー1';
+  const oppType = document.getElementById('kk-opponent-type').value;
+  const p2name  = oppType === 'local' ? (document.getElementById('kk-p2-name').value.trim() || 'プレイヤー2') : 'NPC';
+  const period  = parseInt(document.getElementById('kk-period').value);
+
+  kkState.npc = (oppType === 'npc');
+  if (kkState.npc) {
+    let diff = 'normal';
+    document.querySelectorAll('#kk-diff-grid .difficulty-btn').forEach(b => { if (b.classList.contains('sel')) diff = b.dataset.diff; });
+    kkState.npcDiff = diff;
+    kkState.p[1].name = `NPC（${diff==='random'?'ランダム':diff==='normal'?'普通':'強い'}）`;
+  } else {
+    kkState.p[1].name = p2name;
+  }
+  kkState.p[0].name       = p1name;
+  kkState.p[0].totalScore = 0;
+  kkState.p[1].totalScore = 0;
+  kkState.totalRounds = period;
+  kkState.round  = 1;
+  kkState.history = [];
+
+  document.getElementById('koikoi-setup').classList.remove('active');
+  document.getElementById('koikoi-game').classList.add('active');
+  kkStartRound();
+}
+
+function kkStartRound() {
+  kkState.p.forEach(p => { p.hand=[]; p.collected=[]; p.koikoi=false; });
+  kkState.field=[]; kkState.deck=[];
+  kkState.cur = (kkState.round - 1) % 2;
+  kkState.phase = 'idle';
+  kkState.selHand=null; kkState.drawnCard=null; kkState.matchCands=[];
+  kkState.prevYaku=[[],[]]; kkState.koikoiBy=null; kkState.animating=false;
+
+  const deck48 = shuffle(CARDS.map(c => c.id));
+  kkState.p[0].hand = deck48.splice(0, 8);
+  kkState.p[1].hand = deck48.splice(0, 8);
+  kkState.field     = deck48.splice(0, 8);
+  kkState.deck      = deck48; // 残り24
+
+  kkRenderAll();
+  kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！${kkState.p[kkState.cur].name} の番`);
+  kkState.phase = 'hand-select';
+  kkCheckNpc();
+}
+
+/* ================================================================
+   [KK] 描画
+================================================================ */
+function kkRenderAll() {
+  kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderPlayer(); kkRenderYaku();
+}
+
+function kkRenderHeader() {
+  document.getElementById('kk-round-num').textContent   = kkState.round;
+  document.getElementById('kk-round-total').textContent = kkState.totalRounds;
+  const c0 = document.getElementById('kk-score-0');
+  const c1 = document.getElementById('kk-score-1');
+  c0.textContent = `${kkState.p[0].name}: ${kkState.p[0].totalScore}pt`;
+  c1.textContent = `${kkState.p[1].name}: ${kkState.p[1].totalScore}pt`;
+  c0.className = 'kk-score-chip' + (kkState.cur===0?' cur':'');
+  c1.className = 'kk-score-chip' + (kkState.cur===1?' cur':'');
+}
+
+function kkRenderOpp() {
+  const opp = 1 - kkState.cur;
+  document.getElementById('kk-opp-label').textContent = `${kkState.p[opp].name} 手札 (${kkState.p[opp].hand.length}枚)`;
+  const area = document.getElementById('kk-opp-hand');
+  area.innerHTML = '';
+  // 相手の手札は常に裏向き（パスプレイ方式）
+  kkState.p[opp].hand.forEach(() => area.appendChild(kkFaceDown()));
+}
+
+function kkRenderField() {
+  const el = document.getElementById('kk-field-cards');
+  el.innerHTML = '';
+  kkState.field.forEach(cid => {
+    const isMatchable = kkState.matchCands.includes(cid);
+    el.appendChild(kkCardEl(cid, isMatchable ? 'matchable' : '', () => kkOnFieldClick(cid)));
+  });
+}
+
+function kkRenderDeck() {
+  document.getElementById('kk-deck-count').textContent = kkState.deck.length;
+  const slot = document.getElementById('kk-drawn-slot');
+  slot.innerHTML = '';
+  if (kkState.drawnCard !== null)
+    slot.appendChild(kkCardEl(kkState.drawnCard, 'drawn-hi no-interact'));
+}
+
+function kkRenderPlayer() {
+  const area = document.getElementById('kk-player-hand');
+  document.getElementById('kk-player-label').textContent = `${kkState.p[kkState.cur].name} 手札`;
+  area.innerHTML = '';
+  kkState.p[kkState.cur].hand.forEach(cid => {
+    const isSel = kkState.selHand === cid;
+    area.appendChild(kkCardEl(cid, isSel ? 'selected' : '', () => kkOnHandClick(cid)));
+  });
+}
+
+function kkRenderYaku() {
+  const opp = 1 - kkState.cur;
+  document.getElementById('kk-yaku-top').innerHTML    = kkYakuText(opp);
+  document.getElementById('kk-yaku-bottom').innerHTML = kkYakuText(kkState.cur);
+}
+
+function kkYakuText(pi) {
+  const { yaku, total } = calculateYaku(kkState.p[pi].collected);
+  if (!yaku.length) return '役: なし';
+  return `<em>${yaku.map(y=>`${y.name}(${y.points}点)`).join(' / ')}</em> = <em>${total}点</em>`;
+}
+
+/* ================================================================
+   [KK] 手札クリック
+================================================================ */
+function kkOnHandClick(cid) {
+  if (kkState.animating || kkState.phase !== 'hand-select') return;
+  if (kkState.npc && kkState.cur === kkState.npcIdx) return;
+  kkState.selHand = cid;
+  kkRenderPlayer();
+  const matches = kkState.field.filter(f => CARDS[f].month === CARDS[cid].month);
+  if (matches.length === 0) {
+    kkPlayToField(cid, []);
+  } else if (matches.length === 1 || matches.length >= 3) {
+    kkPlayToField(cid, matches.length >= 3 ? matches : [matches[0]]);
+  } else {
+    kkState.phase = 'field-match-h';
+    kkState.matchCands = matches;
+    kkRenderField();
+    kkSetStatus('取るカードを場から選んでください');
+  }
+}
+
+/* ================================================================
+   [KK] 場クリック
+================================================================ */
+function kkOnFieldClick(cid) {
+  if (kkState.animating) return;
+  if (kkState.npc && kkState.cur === kkState.npcIdx) return;
+  if (kkState.phase === 'field-match-h' && kkState.matchCands.includes(cid)) {
+    kkPlayToField(kkState.selHand, [cid]);
+  } else if (kkState.phase === 'field-match-d' && kkState.matchCands.includes(cid)) {
+    kkDrawToField([cid]);
+  }
+}
+
+/* ================================================================
+   [KK] 手札を場に出す
+================================================================ */
+async function kkPlayToField(handCid, matchFieldIds) {
+  kkState.animating = true;
+  kkState.phase = 'idle';
+  kkState.matchCands = [];
+  kkState.p[kkState.cur].hand = kkState.p[kkState.cur].hand.filter(id => id !== handCid);
+
+  if (matchFieldIds.length > 0) {
+    matchFieldIds.forEach(fid => {
+      kkState.field = kkState.field.filter(id => id !== fid);
+      kkState.p[kkState.cur].collected.push(fid);
+    });
+    kkState.p[kkState.cur].collected.push(handCid);
+    kkRenderAll();
+    await kkGlow([handCid, ...matchFieldIds]);
+    kkSetStatus(`${kkState.p[kkState.cur].name} → ${CARDS[handCid].month}月（${CARDS[handCid].flower}）取得`);
+  } else {
+    kkState.field.push(handCid);
+    kkRenderAll();
+    kkSetStatus(`${kkState.p[kkState.cur].name} → ${CARDS[handCid].month}月（${CARDS[handCid].flower}）を場に出す`);
+  }
+
+  kkState.selHand = null;
+  await sleep(400);
+  await kkDraw();
+}
+
+/* ================================================================
+   [KK] 山札ドロー
+================================================================ */
+async function kkDraw() {
+  if (kkState.deck.length === 0) { await kkEndRoundDraw(); return; }
+  const drawnId = kkState.deck.shift();
+  kkState.drawnCard = drawnId;
+  kkRenderDeck();
+  kkSetStatus(`山札: ${CARDS[drawnId].month}月（${CARDS[drawnId].flower}）`);
+  await sleep(500);
+
+  const matches = kkState.field.filter(f => CARDS[f].month === CARDS[drawnId].month);
+  if (matches.length === 0) {
+    kkState.field.push(drawnId);
+    kkState.drawnCard = null;
+    kkRenderAll();
+    await kkAfterDraw(false);
+  } else if (matches.length === 1 || matches.length >= 3) {
+    const take = matches.length >= 3 ? matches : [matches[0]];
+    take.forEach(fid => { kkState.field = kkState.field.filter(id=>id!==fid); kkState.p[kkState.cur].collected.push(fid); });
+    kkState.p[kkState.cur].collected.push(drawnId);
+    kkState.drawnCard = null;
+    kkRenderAll();
+    await kkGlow([drawnId, ...take]);
+    kkSetStatus(`山札から ${CARDS[drawnId].month}月（${CARDS[drawnId].flower}）取得！`);
+    await sleep(300);
+    await kkAfterDraw(true);
+  } else {
+    // 2枚マッチ: プレイヤーまたはNPCが選ぶ
+    kkState.phase = 'field-match-d';
+    kkState.matchCands = matches;
+    kkRenderField();
+    kkSetStatus(`山札: ${CARDS[drawnId].month}月 — 取るカードを選んでください`);
+    kkState.animating = false;
+    kkCheckNpc();
+  }
+}
+
+async function kkDrawToField(matchFieldIds) {
+  kkState.animating = true;
+  kkState.phase = 'idle';
+  kkState.matchCands = [];
+  const drawnId = kkState.drawnCard;
+  matchFieldIds.forEach(fid => { kkState.field = kkState.field.filter(id=>id!==fid); kkState.p[kkState.cur].collected.push(fid); });
+  kkState.p[kkState.cur].collected.push(drawnId);
+  kkState.drawnCard = null;
+  kkRenderAll();
+  await kkGlow([drawnId, ...matchFieldIds]);
+  await sleep(300);
+  await kkAfterDraw(true);
+}
+
+async function kkAfterDraw(didCollect) {
+  if (didCollect) {
+    const newY = kkCheckNewYaku();
+    if (newY.length > 0) {
+      const { total } = calculateYaku(kkState.p[kkState.cur].collected);
+      kkState.animating = false;
+      await kkShowChoiceDialog(total);
+      return;
+    }
+  }
+  await kkNextTurn();
+}
+
+function kkCheckNewYaku() {
+  const { yaku } = calculateYaku(kkState.p[kkState.cur].collected);
+  const names = yaku.map(y => y.name);
+  const newOnes = names.filter(n => !kkState.prevYaku[kkState.cur].includes(n));
+  kkState.prevYaku[kkState.cur] = names;
+  return newOnes;
+}
+
+/* ================================================================
+   [KK] こいこい/勝負ダイアログ
+================================================================ */
+function kkShowChoiceDialog(totalPts) {
+  return new Promise(resolve => {
+    const { yaku } = calculateYaku(kkState.p[kkState.cur].collected);
+    document.getElementById('kk-choice-yaku-list').innerHTML =
+      yaku.map(y=>`◆ ${y.name}：${y.points}点`).join('<br>');
+    document.getElementById('kk-choice-pts').textContent = totalPts;
+    const dialog = document.getElementById('koikoi-choice');
+    dialog.classList.add('active');
+
+    const isNpcTurn = kkState.npc && kkState.cur === kkState.npcIdx;
+    if (isNpcTurn) {
+      setTimeout(async () => {
+        dialog.classList.remove('active');
+        if (kkNpcDecideKoikoi(totalPts)) { await kkDoKoikoi(); } else { await kkDoShobu(); }
+        resolve();
+      }, 1200);
+    } else {
+      const btnK = document.getElementById('kk-btn-koikoi');
+      const btnS = document.getElementById('kk-btn-shobu');
+      const onK = async () => { cleanup(); dialog.classList.remove('active'); await kkDoKoikoi(); resolve(); };
+      const onS = async () => { cleanup(); dialog.classList.remove('active'); await kkDoShobu(); resolve(); };
+      const cleanup = () => { btnK.removeEventListener('click',onK); btnS.removeEventListener('click',onS); };
+      btnK.addEventListener('click', onK);
+      btnS.addEventListener('click', onS);
+    }
+  });
+}
+
+async function kkDoKoikoi() {
+  kkState.koikoiBy = kkState.cur;
+  kkState.p[kkState.cur].koikoi = true;
+  kkState.prevYaku[kkState.cur] = []; // こいこい後はリセット（次の新役のみ検出）
+  kkSetStatus(`${kkState.p[kkState.cur].name} こいこい！（続ける）`);
+  await sleep(600);
+  await kkNextTurn();
+}
+
+async function kkDoShobu() {
+  kkSetStatus(`${kkState.p[kkState.cur].name} 勝負！`);
+  await sleep(300);
+  await kkEndRoundWin(kkState.cur);
+}
+
+/* ================================================================
+   [KK] ターン交代
+================================================================ */
+async function kkNextTurn() {
+  kkState.animating = true;
+  if (kkState.p[0].hand.length === 0 && kkState.p[1].hand.length === 0) {
+    await kkEndRoundDraw(); return;
+  }
+  kkState.cur = 1 - kkState.cur;
+  kkState.selHand = null; kkState.drawnCard = null; kkState.matchCands = [];
+  kkState.phase = 'hand-select';
+  kkRenderAll();
+  kkSetStatus(`${kkState.p[kkState.cur].name} のターン`);
+  await sleep(300);
+  kkState.animating = false;
+  kkCheckNpc();
+}
+
+/* ================================================================
+   [KK] ラウンド終了
+================================================================ */
+async function kkEndRoundDraw() {
+  kkState.phase = 'idle'; kkState.animating = false;
+  kkState.history.push('draw');
+  await kkShowRoundResult(null, 0, [], false);
+}
+
+async function kkEndRoundWin(winnerIdx) {
+  kkState.phase = 'idle';
+  const { yaku, total } = calculateYaku(kkState.p[winnerIdx].collected);
+  let pts = total;
+  const koikoiBonus = kkState.p[0].koikoi || kkState.p[1].koikoi;
+  if (koikoiBonus) pts *= 2;
+  kkState.p[winnerIdx].totalScore += pts;
+  kkState.history.push(winnerIdx === 0 ? 'win0' : 'win1');
+  await kkShowRoundResult(winnerIdx, pts, yaku, koikoiBonus);
+}
+
+function kkShowRoundResult(winnerIdx, pts, yaku, koikoiBonus) {
+  return new Promise(resolve => {
+    document.getElementById('kk-rr-title').textContent  = `ラウンド ${kkState.round} / ${kkState.totalRounds} 終了`;
+    document.getElementById('kk-rr-winner').textContent = winnerIdx === null ? '引き分け（手札切れ）' : `${kkState.p[winnerIdx].name} の勝ち！`;
+    document.getElementById('kk-rr-detail').innerHTML   = winnerIdx === null ? '双方得点なし' :
+      yaku.map(y=>`◆ ${y.name}：${y.points}点`).join('<br>') +
+      `<br><strong style="color:var(--gold-light)">+${pts}点${koikoiBonus?' (こいこいボーナス×2)':''}</strong>`;
+    document.getElementById('kk-rr-totals').innerHTML =
+      kkState.p.map(p=>`<div class="kk-rr-tot">${p.name}: ${p.totalScore}点</div>`).join('');
+    const hist = document.getElementById('kk-rr-history');
+    hist.innerHTML = '';
+    kkState.history.forEach(h => { const d=document.createElement('div'); d.className='kk-rr-dot '+h; hist.appendChild(d); });
+    for (let i = kkState.history.length; i < kkState.totalRounds; i++) {
+      const d=document.createElement('div'); d.className='kk-rr-dot'; hist.appendChild(d);
+    }
+    const isLast = kkState.round >= kkState.totalRounds;
+    const btn = document.getElementById('kk-next-round-btn');
+    btn.textContent = isLast ? 'ゲーム終了' : '次のラウンドへ';
+    document.getElementById('kk-round-result').classList.add('active');
+    const onClick = () => {
+      btn.removeEventListener('click', onClick);
+      document.getElementById('kk-round-result').classList.remove('active');
+      if (isLast) { kkShowFinalResult(); } else { kkState.round++; kkStartRound(); }
+      resolve();
+    };
+    btn.addEventListener('click', onClick);
+  });
+}
+
+function kkShowFinalResult() {
+  document.getElementById('koikoi-game').classList.remove('active');
+  document.getElementById('koikoi-result').classList.add('active');
+  const list = document.getElementById('kk-final-list');
+  list.innerHTML = '';
+  const sorted = [0,1].map(i=>({i,name:kkState.p[i].name,score:kkState.p[i].totalScore})).sort((a,b)=>b.score-a.score);
+  sorted.forEach((p, rank) => {
+    const item = document.createElement('div');
+    item.className = 'result-item' + (rank===0?' rank1':'');
+    item.style.animationDelay = `${rank*180}ms`;
+    item.innerHTML = `<div class="ri-header"><span class="ri-rank">${['一','二'][rank]}位</span><span class="ri-name">${p.name}</span><span class="ri-score">${p.score} 点</span></div>`;
+    list.appendChild(item);
+  });
+}
+
+/* ================================================================
+   [KK] グローアニメ（簡易）
+================================================================ */
+async function kkGlow(cardIds) {
+  await sleep(80);
+  // 取得済みなので DOM に要素は残っていないが、短い待機で演出感を出す
+}
+
+/* ================================================================
+   [KK] NPC — チェック & ターン
+================================================================ */
+function kkCheckNpc() {
+  if (kkState.npc && kkState.cur === kkState.npcIdx && !kkState.animating) {
+    setTimeout(kkNpcTurn, 700);
+  }
+}
+
+async function kkNpcTurn() {
+  if (!kkState.npc || kkState.cur !== kkState.npcIdx) return;
+
+  if (kkState.phase === 'hand-select') {
+    const cid = kkNpcChooseHand();
+    if (cid === null) return;
+    kkState.animating = true;
+    kkState.selHand = cid; kkRenderPlayer();
+    await sleep(600);
+    const matches = kkState.field.filter(f => CARDS[f].month === CARDS[cid].month);
+    if (matches.length === 0) {
+      await kkPlayToField(cid, []);
+    } else if (matches.length === 1 || matches.length >= 3) {
+      await kkPlayToField(cid, matches.length>=3 ? matches : [matches[0]]);
+    } else {
+      await kkPlayToField(cid, [kkNpcPickField(matches)]);
+    }
+
+  } else if (kkState.phase === 'field-match-d') {
+    kkState.animating = true;
+    await sleep(500);
+    await kkDrawToField([kkNpcPickField(kkState.matchCands)]);
+  }
+}
+
+function kkNpcChooseHand() {
+  const hand = kkState.p[kkState.npcIdx].hand;
+  if (!hand.length) return null;
+  if (kkState.npcDiff === 'random') return hand[Math.floor(Math.random()*hand.length)];
+  const matchable = hand.filter(cid => kkState.field.some(f => CARDS[f].month===CARDS[cid].month));
+  const pool = matchable.length ? matchable : hand;
+  if (kkState.npcDiff === 'strong') return kkNpcBestCard(pool);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function kkNpcPickField(candidates) {
+  if (kkState.npcDiff === 'random') return candidates[Math.floor(Math.random()*candidates.length)];
+  return kkNpcBestCard(candidates);
+}
+
+function kkNpcBestCard(cards) {
+  const col = kkState.p[kkState.npcIdx].collected;
+  let best = cards[0], bestPts = -1;
+  cards.forEach(cid => {
+    const { total } = calculateYaku([...col, cid]);
+    if (total > bestPts) { bestPts = total; best = cid; }
+  });
+  return best;
+}
+
+function kkNpcDecideKoikoi(pts) {
+  if (kkState.npcDiff === 'random')  return Math.random() < 0.4;
+  if (kkState.npcDiff === 'normal')  return pts < 5 && !kkState.p[1-kkState.npcIdx].koikoi;
+  // strong: こいこい宣言は慎重に
+  return pts < 8 && !kkState.p[1-kkState.npcIdx].koikoi;
+}
 
 </script>
 </body>
