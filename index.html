@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="花札と神経衰弱を組み合わせた新感覚カードゲーム。同じ月の札を集めて役を作れ！2〜4人対応。">
+  <title>花札神経衰弱</title>
+  <style>
+    /* ===========================
+       1. CSS変数・リセット
+    =========================== */
+    :root {
+      --card-w: 78px;
+      --card-h: 112px;
+      --gap: 6px;
+      --bg: #0f0700;
+      --gold: #d4a843;
+      --gold-light: #ffd770;
+      --text: #f0e6d3;
+      --text-muted: #a08060;
+      --border: #5c3a00;
+      --panel: rgba(255,255,255,0.06);
+      --radius: 8px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'YuMincho', 'MS Mincho', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* ===========================
+       2. セットアップ画面
+    =========================== */
+    #setup {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 20px;
+      padding: 24px 16px;
+    }
+    #setup.active { display: flex; }
+    #setup h1 {
+      font-size: 2.6em;
+      color: var(--gold);
+      text-shadow: 0 0 28px rgba(212,168,67,0.55);
+      letter-spacing: 0.12em;
+    }
+    #setup .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95em;
+      letter-spacing: 0.06em;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .form-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-row label {
+      color: var(--gold);
+      min-width: 110px;
+      font-size: 0.9em;
+    }
+    select, input[type="text"] {
+      flex: 1;
+      padding: 7px 11px;
+      background: #1a0e00;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9em;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--gold); }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+    }
+    /* 花札説明カード */
+    .info-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .info-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 0.8em;
+    }
+    .info-card .ic-title {
+      color: var(--gold);
+      font-size: 1em;
+      margin-bottom: 4px;
+    }
+    .info-card .ic-body { color: var(--text-muted); line-height: 1.6; }
+    /* ルール説明 */
+    .rule-box {
+      width: 100%;
+      max-width: 360px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 0.82em;
+      color: var(--text-muted);
+      line-height: 1.85;
+    }
+    .rule-box .rb-title {
+      color: var(--gold);
+      font-size: 0.95em;
+      margin-bottom: 6px;
+    }
+    .setup-version {
+      font-size: 0.72em;
+      color: #604830;
+      margin-top: 4px;
+    }
+
+    /* ===========================
+       3. ゲーム画面
+    =========================== */
+    #game {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 8px 20px;
+      min-height: 100vh;
+    }
+    #game.active { display: flex; }
+
+    /* ゲームヘッダー（役一覧 + 残り枚数） */
+    #game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 740px;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+    #remaining {
+      font-size: 0.88em;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+    #remaining span {
+      color: var(--gold-light);
+      font-weight: bold;
+    }
+
+    /* プレイヤーバー */
+    #player-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 8px;
+      width: 100%;
+      max-width: 740px;
+    }
+    .player-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 14px;
+      text-align: center;
+      min-width: 105px;
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+    }
+    .player-card.active {
+      border-color: var(--gold);
+      background: rgba(212,168,67,0.13);
+      box-shadow: 0 0 14px rgba(212,168,67,0.32);
+    }
+    .player-card .pname { font-weight: bold; color: var(--gold); font-size: 0.9em; }
+    .player-card .pcount { font-size: 0.75em; color: var(--text-muted); }
+    .player-card .pscore { font-size: 0.95em; color: var(--gold-light); font-weight: bold; }
+
+    /* ステータスメッセージ */
+    #status {
+      font-size: 1em;
+      color: var(--gold-light);
+      margin-bottom: 8px;
+      min-height: 28px;
+      text-align: center;
+      letter-spacing: 0.06em;
+      transition: opacity 0.2s;
+    }
+
+    /* カードグリッド */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(8, var(--card-w));
+      gap: var(--gap);
+      padding: 8px;
+    }
+
+    /* ===========================
+       4. カードスタイル・3Dフリップ
+    =========================== */
+    .card {
+      width: var(--card-w);
+      height: var(--card-h);
+      perspective: 700px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      position: relative;
+    }
+    .card:not(.gone):not(.flipped):hover {
+      transform: translateY(-4px);
+    }
+    .card.gone {
+      visibility: hidden;
+      pointer-events: none;
+      cursor: default;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.45s ease;
+    }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card-back, .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      overflow: hidden;
+    }
+
+    /* カード裏面 */
+    .card-back {
+      background: linear-gradient(145deg, #2a1400 0%, #4e2c00 50%, #2a1400 100%);
+      border: 2px solid #6b4010;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-back::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(107,64,16,0.7);
+      border-radius: 3px;
+    }
+    .card-back::after {
+      content: '花';
+      font-size: 2.2em;
+      color: #7a4a18;
+      opacity: 0.65;
+    }
+
+    /* カード表面 */
+    .card-face {
+      transform: rotateY(180deg);
+      border: 2px solid #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 4px;
+    }
+    .card-face .c-month {
+      font-size: 0.7em;
+      font-weight: bold;
+      width: 100%;
+      text-align: center;
+      line-height: 1.3;
+      opacity: 0.9;
+    }
+    .card-face .c-flower {
+      font-size: 1.45em;
+      line-height: 1;
+    }
+    .card-face .c-name {
+      font-size: 0.63em;
+      text-align: center;
+      line-height: 1.3;
+      word-break: keep-all;
+      opacity: 0.9;
+    }
+    .card-face .c-badge {
+      font-size: 0.58em;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    /* カード種別スタイル */
+    .type-hikari {
+      background: linear-gradient(155deg, #5a3800, #c8880a);
+      border-color: #d4a843 !important;
+      color: #fff8e0;
+    }
+    .type-hikari .c-badge { background: #ffd700; color: #3a1f00; }
+
+    .type-tane {
+      background: linear-gradient(155deg, #0d2d0d, #1e5c1e);
+      border-color: #2d7a2d !important;
+      color: #d0f0d0;
+    }
+    .type-tane .c-badge { background: #3a9a3a; color: #e0ffe0; }
+
+    .type-tanzaku-red {
+      background: linear-gradient(155deg, #2d0505, #6e1010);
+      border-color: #9a2020 !important;
+      color: #ffd8d8;
+    }
+    .type-tanzaku-red .c-badge { background: #cc2222; color: #ffe8e8; }
+
+    .type-tanzaku-blue {
+      background: linear-gradient(155deg, #050520, #101060);
+      border-color: #2020a0 !important;
+      color: #d8d8ff;
+    }
+    .type-tanzaku-blue .c-badge { background: #2233cc; color: #e0e8ff; }
+
+    .type-kasu {
+      background: linear-gradient(155deg, #1a1810, #3a3520);
+      border-color: #5a5540 !important;
+      color: #e0d8c0;
+    }
+    .type-kasu .c-badge { background: #706850; color: #f0ead8; }
+
+    /* ===========================
+       5. アニメーション
+    =========================== */
+    /* ── 配置演出（ゲーム開始時） ── */
+    @keyframes dealIn {
+      from { opacity: 0; transform: translateY(-14px) scale(0.82); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    /* ── マッチ発光 ── */
+    @keyframes matchGlow {
+      0%   { box-shadow: 0 0 0px  rgba(255,215,0,0); }
+      40%  { box-shadow: 0 0 22px rgba(255,215,0,1); }
+      100% { box-shadow: 0 0 0px  rgba(255,215,0,0); }
+    }
+    .card.match-anim .card-inner { animation: matchGlow 0.65s ease; }
+
+    /* ── ミスシェイク ── */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      18%     { transform: translateX(-7px) rotate(-2deg); }
+      36%     { transform: translateX(7px)  rotate(2deg); }
+      54%     { transform: translateX(-5px) rotate(-1deg); }
+      72%     { transform: translateX(5px)  rotate(1deg); }
+      88%     { transform: translateX(-2px); }
+    }
+    .card.shake { animation: shake 0.52s ease; }
+
+    /* ── 結果フェードイン ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===========================
+       6. ターン交代オーバーレイ
+    =========================== */
+    #turn-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 5, 0, 0.88);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #turn-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #turn-overlay .to-border {
+      border: 2px solid var(--gold);
+      border-radius: 14px;
+      padding: 30px 50px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 340px;
+      width: 90%;
+    }
+    #turn-overlay .to-label {
+      font-size: 0.88em;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+    #turn-overlay .to-name {
+      font-size: 2em;
+      color: var(--gold);
+      text-shadow: 0 0 18px rgba(212,168,67,0.7);
+      letter-spacing: 0.1em;
+    }
+    #turn-overlay .to-score {
+      font-size: 0.88em;
+      color: var(--gold-light);
+    }
+    #turn-overlay .to-hint {
+      font-size: 0.78em;
+      color: var(--text-muted);
+      margin-top: 8px;
+      letter-spacing: 0.06em;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1; }
+    }
+    #turn-overlay .to-hint { animation: pulse 1.6s ease infinite; }
+
+    /* ===========================
+       7. 役一覧モーダル
+    =========================== */
+    #yaku-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 5, 0, 0.9);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #yaku-modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .yaku-modal-box {
+      background: #180c00;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .ym-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ym-header h2 { color: var(--gold); font-size: 1.1em; letter-spacing: 0.08em; }
+    .ym-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.85em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .ym-close:hover { border-color: var(--gold); color: var(--gold); }
+    .ym-body {
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .ym-section-title {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
+    .ym-rows { display: flex; flex-direction: column; gap: 6px; }
+    .ym-row {
+      display: grid;
+      grid-template-columns: 5em 1fr auto;
+      align-items: start;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(92,58,0,0.3);
+      font-size: 0.85em;
+    }
+    .ym-row:last-child { border-bottom: none; }
+    .ym-yaku-name { color: var(--gold); font-weight: bold; white-space: nowrap; }
+    .ym-yaku-desc { color: var(--text-muted); line-height: 1.55; }
+    .ym-yaku-pts {
+      color: var(--gold-light);
+      font-weight: bold;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    /* ===========================
+       8. 結果画面
+    =========================== */
+    #result {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 40px;
+      min-height: 100vh;
+    }
+    #result.active { display: flex; }
+    #result h2 {
+      font-size: 2em;
+      color: var(--gold);
+      margin-bottom: 6px;
+      text-shadow: 0 0 16px rgba(212,168,67,0.55);
+      letter-spacing: 0.08em;
+    }
+    .result-sub {
+      font-size: 0.85em;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .result-list {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .result-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      opacity: 0;
+      animation: fadeUp 0.45s ease forwards;
+    }
+    .result-item.rank1 {
+      border-color: var(--gold);
+      background: rgba(212,168,67,0.1);
+    }
+    .result-item .ri-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .result-item .ri-rank { font-size: 0.85em; color: var(--text-muted); }
+    .result-item .ri-name { font-size: 1.1em; color: var(--gold); font-weight: bold; }
+    .result-item.rank1 .ri-name { font-size: 1.25em; }
+    .result-item .ri-score {
+      font-size: 1.3em;
+      color: var(--gold-light);
+      font-weight: bold;
+      margin-left: auto;
+    }
+    .result-item .ri-meta {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .r-yaku-list { list-style: none; }
+    .r-yaku-list li {
+      font-size: 0.88em;
+      color: var(--gold-light);
+      padding: 2px 0;
+      opacity: 0;
+      animation: fadeUp 0.35s ease forwards;
+    }
+    .r-yaku-list li::before { content: '◆ '; }
+    .no-yaku { font-size: 0.82em; color: #555; font-style: italic; }
+
+    /* ===========================
+       9. 共通ボタン
+    =========================== */
+    .btn {
+      padding: 10px 32px;
+      font-size: 1em;
+      font-family: inherit;
+      background: #5c2800;
+      color: var(--text);
+      border: 2px solid var(--gold);
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover {
+      background: #7a3a00;
+      box-shadow: 0 0 12px rgba(212,168,67,0.4);
+    }
+    .btn:active { background: #4a2000; }
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 0.82em;
+      font-family: inherit;
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.2s;
+    }
+    .btn-sm:hover { background: rgba(212,168,67,0.12); }
+
+    /* ===========================
+       10. レスポンシブ
+    =========================== */
+    @media (max-width: 680px) {
+      :root { --card-w: 52px; --card-h: 75px; --gap: 4px; }
+      .card-face .c-flower { font-size: 1.1em; }
+      .card-face .c-name { font-size: 0.55em; }
+      #setup h1 { font-size: 2em; }
+      .info-cards { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 460px) {
+      :root { --card-w: 38px; --card-h: 55px; --gap: 3px; }
+      .card-back::after { font-size: 1.5em; }
+      .card-face .c-badge { display: none; }
+      .card-face .c-name  { display: none; }
+      .card-face .c-flower { font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================================
+     セットアップ画面
+======================================================== -->
+<div id="setup" class="active">
+  <h1>花札神経衰弱</h1>
+  <p class="subtitle">同じ月の札を集めて役を作れ！</p>
+
+  <!-- 花札基礎知識 -->
+  <div class="info-cards">
+    <div class="info-card">
+      <div class="ic-title">光（ひかり）</div>
+      <div class="ic-body">最も格上の札。<br>鶴・月・桜の幕など豪華な絵柄。全5枚。</div>
+    </div>
+    <div class="info-card">
+      <div class="ic-title">種（たね）</div>
+      <div class="ic-body">動物や道具が描かれた中級の札。<br>猪・鹿・蝶など。全9枚。</div>
+    </div>
+    <div class="info-card">
+      <div class="ic-title">短冊（たんざく）</div>
+      <div class="ic-body">短冊が描かれた札。<br>赤と青の2種類がある。全9枚。</div>
+    </div>
+    <div class="info-card">
+      <div class="ic-title">カス</div>
+      <div class="ic-body">絵柄がシンプルな札。<br>枚数が最も多く全25枚。</div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="form-row">
+      <label>プレイヤー人数</label>
+      <select id="player-count">
+        <option value="2">2人</option>
+        <option value="3">3人</option>
+        <option value="4">4人</option>
+      </select>
+    </div>
+    <div id="name-inputs"></div>
+  </div>
+
+  <button class="btn" id="start-btn">ゲーム開始</button>
+
+  <div class="rule-box">
+    <div class="rb-title">遊び方</div>
+    全48枚を裏向きに並べ、順番に2枚ずつめくります。<br>
+    <strong style="color:var(--gold)">同じ月の札</strong>ならもらえます。違う月なら裏向きに戻します。<br>
+    場の札がなくなったらゲーム終了。<br>
+    取得枚数ではなく、集めた札で作れる<strong style="color:var(--gold)">役のポイント</strong>で勝敗を決めます。
+  </div>
+
+  <p class="setup-version">v1.0.0 — 花札神経衰弱</p>
+</div>
+
+<!-- ========================================================
+     ゲーム画面
+======================================================== -->
+<div id="game">
+  <div id="game-header">
+    <button class="btn-sm" id="yaku-btn">役一覧</button>
+    <div id="remaining">残り <span id="remain-count">48</span> 枚</div>
+  </div>
+  <div id="player-bar"></div>
+  <div id="status">準備中...</div>
+  <div id="board"></div>
+</div>
+
+<!-- ========================================================
+     ターン交代オーバーレイ
+======================================================== -->
+<div id="turn-overlay">
+  <div class="to-border">
+    <div class="to-label">次のターン</div>
+    <div class="to-name" id="to-name">プレイヤー1</div>
+    <div class="to-score" id="to-score">現在 0 点</div>
+    <div class="to-hint">画面をタップして開始</div>
+  </div>
+</div>
+
+<!-- ========================================================
+     役一覧モーダル
+======================================================== -->
+<div id="yaku-modal">
+  <div class="yaku-modal-box">
+    <div class="ym-header">
+      <h2>役一覧（やくいちらん）</h2>
+      <button class="ym-close" id="yaku-close">閉じる</button>
+    </div>
+    <div class="ym-body" id="yaku-modal-body">
+      <!-- JS で生成 -->
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     結果画面
+======================================================== -->
+<div id="result">
+  <h2>ゲーム終了！</h2>
+  <p class="result-sub">役のポイントで順位を決定</p>
+  <div class="result-list" id="result-list"></div>
+  <button class="btn" id="replay-btn">もう一度遊ぶ</button>
+</div>
+
+
+<script>
+'use strict';
+
+/* ================================================================
+   [DATA] 花札 48枚定義
+================================================================ */
+const CARDS = [
+  // 1月 松
+  { id:0,  month:1,  flower:'松', monthLabel:'睦月', type:'hikari',       name:'鶴' },
+  { id:1,  month:1,  flower:'松', monthLabel:'睦月', type:'tanzaku_red',  name:'赤短冊' },
+  { id:2,  month:1,  flower:'松', monthLabel:'睦月', type:'kasu',         name:'カス' },
+  { id:3,  month:1,  flower:'松', monthLabel:'睦月', type:'kasu',         name:'カス' },
+  // 2月 梅
+  { id:4,  month:2,  flower:'梅', monthLabel:'如月', type:'tane',         name:'鶯' },
+  { id:5,  month:2,  flower:'梅', monthLabel:'如月', type:'tanzaku_red',  name:'赤短冊' },
+  { id:6,  month:2,  flower:'梅', monthLabel:'如月', type:'kasu',         name:'カス' },
+  { id:7,  month:2,  flower:'梅', monthLabel:'如月', type:'kasu',         name:'カス' },
+  // 3月 桜
+  { id:8,  month:3,  flower:'桜', monthLabel:'弥生', type:'hikari',       name:'幕' },
+  { id:9,  month:3,  flower:'桜', monthLabel:'弥生', type:'tanzaku_red',  name:'赤短冊' },
+  { id:10, month:3,  flower:'桜', monthLabel:'弥生', type:'kasu',         name:'カス' },
+  { id:11, month:3,  flower:'桜', monthLabel:'弥生', type:'kasu',         name:'カス' },
+  // 4月 藤
+  { id:12, month:4,  flower:'藤', monthLabel:'卯月', type:'tane',         name:'不如帰' },
+  { id:13, month:4,  flower:'藤', monthLabel:'卯月', type:'tanzaku_red',  name:'短冊' },
+  { id:14, month:4,  flower:'藤', monthLabel:'卯月', type:'kasu',         name:'カス' },
+  { id:15, month:4,  flower:'藤', monthLabel:'卯月', type:'kasu',         name:'カス' },
+  // 5月 菖蒲
+  { id:16, month:5,  flower:'菖蒲', monthLabel:'皐月', type:'tane',        name:'八橋' },
+  { id:17, month:5,  flower:'菖蒲', monthLabel:'皐月', type:'tanzaku_red', name:'短冊' },
+  { id:18, month:5,  flower:'菖蒲', monthLabel:'皐月', type:'kasu',        name:'カス' },
+  { id:19, month:5,  flower:'菖蒲', monthLabel:'皐月', type:'kasu',        name:'カス' },
+  // 6月 牡丹
+  { id:20, month:6,  flower:'牡丹', monthLabel:'水無月', type:'tane',       name:'蝶' },
+  { id:21, month:6,  flower:'牡丹', monthLabel:'水無月', type:'tanzaku_blue',name:'青短冊' },
+  { id:22, month:6,  flower:'牡丹', monthLabel:'水無月', type:'kasu',       name:'カス' },
+  { id:23, month:6,  flower:'牡丹', monthLabel:'水無月', type:'kasu',       name:'カス' },
+  // 7月 萩
+  { id:24, month:7,  flower:'萩', monthLabel:'文月', type:'tane',          name:'猪' },
+  { id:25, month:7,  flower:'萩', monthLabel:'文月', type:'tanzaku_red',   name:'短冊' },
+  { id:26, month:7,  flower:'萩', monthLabel:'文月', type:'kasu',          name:'カス' },
+  { id:27, month:7,  flower:'萩', monthLabel:'文月', type:'kasu',          name:'カス' },
+  // 8月 芒
+  { id:28, month:8,  flower:'芒', monthLabel:'葉月', type:'hikari',        name:'月' },
+  { id:29, month:8,  flower:'芒', monthLabel:'葉月', type:'tane',          name:'雁' },
+  { id:30, month:8,  flower:'芒', monthLabel:'葉月', type:'kasu',          name:'カス' },
+  { id:31, month:8,  flower:'芒', monthLabel:'葉月', type:'kasu',          name:'カス' },
+  // 9月 菊
+  { id:32, month:9,  flower:'菊', monthLabel:'長月', type:'tane',          name:'盃' },
+  { id:33, month:9,  flower:'菊', monthLabel:'長月', type:'tanzaku_blue',  name:'青短冊' },
+  { id:34, month:9,  flower:'菊', monthLabel:'長月', type:'kasu',          name:'カス' },
+  { id:35, month:9,  flower:'菊', monthLabel:'長月', type:'kasu',          name:'カス' },
+  // 10月 紅葉
+  { id:36, month:10, flower:'紅葉', monthLabel:'神無月', type:'tane',       name:'鹿' },
+  { id:37, month:10, flower:'紅葉', monthLabel:'神無月', type:'tanzaku_blue',name:'青短冊' },
+  { id:38, month:10, flower:'紅葉', monthLabel:'神無月', type:'kasu',       name:'カス' },
+  { id:39, month:10, flower:'紅葉', monthLabel:'神無月', type:'kasu',       name:'カス' },
+  // 11月 柳
+  { id:40, month:11, flower:'柳', monthLabel:'霜月', type:'hikari',        name:'道風' },
+  { id:41, month:11, flower:'柳', monthLabel:'霜月', type:'tane',          name:'燕' },
+  { id:42, month:11, flower:'柳', monthLabel:'霜月', type:'tanzaku_red',   name:'短冊' },
+  { id:43, month:11, flower:'柳', monthLabel:'霜月', type:'kasu',          name:'カス' },
+  // 12月 桐
+  { id:44, month:12, flower:'桐', monthLabel:'師走', type:'hikari',        name:'鳳凰' },
+  { id:45, month:12, flower:'桐', monthLabel:'師走', type:'kasu',          name:'カス' },
+  { id:46, month:12, flower:'桐', monthLabel:'師走', type:'kasu',          name:'カス' },
+  { id:47, month:12, flower:'桐', monthLabel:'師走', type:'kasu',          name:'カス' },
+];
+
+/* ================================================================
+   [DATA] 役一覧（モーダル表示用）
+================================================================ */
+const YAKU_GUIDE = [
+  {
+    category: '光（ひかり）系　※最高位のみ成立',
+    rows: [
+      { name: '五光',   pts: '15点', desc: '光札5枚すべて（松に鶴・桜に幕・芒に月・柳に道風・桐に鳳凰）' },
+      { name: '四光',   pts: '8点',  desc: '道風を除く光4枚' },
+      { name: '雨四光', pts: '7点',  desc: '道風を含む光4枚' },
+      { name: '三光',   pts: '5点',  desc: '道風を除く光3枚' },
+    ]
+  },
+  {
+    category: '特殊役　※複数同時成立可',
+    rows: [
+      { name: '猪鹿蝶',    pts: '5点', desc: '萩に猪（7月）＋ 紅葉に鹿（10月）＋ 牡丹に蝶（6月）' },
+      { name: '赤短',      pts: '5点', desc: '松（1月）・梅（2月）・桜（3月）の赤短冊3枚' },
+      { name: '青短',      pts: '5点', desc: '牡丹（6月）・菊（9月）・紅葉（10月）の青短冊3枚' },
+      { name: '月見で一杯', pts: '5点', desc: '芒に月（8月光）＋ 菊に盃（9月種）' },
+      { name: '花見で一杯', pts: '5点', desc: '桜に幕（3月光）＋ 菊に盃（9月種）' },
+    ]
+  },
+  {
+    category: '数え役　※累積加算',
+    rows: [
+      { name: '種',  pts: '1点〜', desc: '種札5枚以上　→　5枚で1点、1枚増えるごとに+1点' },
+      { name: '短冊', pts: '1点〜', desc: '短冊5枚以上（赤・青問わず）　→　5枚で1点、以降+1点/枚' },
+      { name: 'カス', pts: '1点〜', desc: 'カス札10枚以上　→　10枚で1点、以降+1点/枚' },
+    ]
+  }
+];
+
+/* ================================================================
+   [LOGIC] 役計算
+================================================================ */
+function calculateYaku(collectedIds) {
+  const collected = collectedIds.map(id => CARDS[id]);
+  const has = (id) => collectedIds.includes(id);
+
+  const hikari  = collected.filter(c => c.type === 'hikari');
+  const tane    = collected.filter(c => c.type === 'tane');
+  const tanzaku = collected.filter(c => c.type === 'tanzaku_red' || c.type === 'tanzaku_blue');
+  const kasu    = collected.filter(c => c.type === 'kasu');
+  const results = [];
+
+  // 光系（排他）
+  const rainId    = 40;
+  const hikariN   = hikari.length;
+  const hasRain   = has(rainId);
+
+  if      (hikariN >= 5)              results.push({ name: '五光',   points: 15 });
+  else if (hikariN === 4 && !hasRain) results.push({ name: '四光',   points: 8  });
+  else if (hikariN === 4 &&  hasRain) results.push({ name: '雨四光', points: 7  });
+  else if (hikariN === 3 && !hasRain) results.push({ name: '三光',   points: 5  });
+
+  // 特殊役
+  if (has(24) && has(36) && has(20)) results.push({ name: '猪鹿蝶',    points: 5 });
+  if (has(1)  && has(5)  && has(9))  results.push({ name: '赤短',      points: 5 });
+  if (has(21) && has(33) && has(37)) results.push({ name: '青短',      points: 5 });
+  if (has(28) && has(32))            results.push({ name: '月見で一杯', points: 5 });
+  if (has(8)  && has(32))            results.push({ name: '花見で一杯', points: 5 });
+
+  // 数え役
+  if (tane.length    >= 5)  results.push({ name: `種（${tane.length}枚）`,    points: 1 + (tane.length - 5)    });
+  if (tanzaku.length >= 5)  results.push({ name: `短冊（${tanzaku.length}枚）`, points: 1 + (tanzaku.length - 5) });
+  if (kasu.length    >= 10) results.push({ name: `カス（${kasu.length}枚）`,   points: 1 + (kasu.length - 10)   });
+
+  const total = results.reduce((sum, y) => sum + y.points, 0);
+  return { yaku: results, total };
+}
+
+/* ================================================================
+   [STATE] ゲーム状態
+================================================================ */
+const state = {
+  players:       [],   // { name, collected: [] }
+  currentPlayer: 0,
+  board:         [],   // { cardId, faceUp, collected }
+  flipped:       [],   // 今ターンめくったboard index（最大2）
+  animating:     false,
+};
+
+/* ================================================================
+   [UTIL]
+================================================================ */
+const sleep  = (ms) => new Promise(r => setTimeout(r, ms));
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+/* ================================================================
+   [DOM] 各要素の参照
+================================================================ */
+const setupEl   = document.getElementById('setup');
+const gameEl    = document.getElementById('game');
+const resultEl  = document.getElementById('result');
+const boardEl   = document.getElementById('board');
+const playerBar = document.getElementById('player-bar');
+const statusEl  = document.getElementById('status');
+const countSel  = document.getElementById('player-count');
+const nameDiv   = document.getElementById('name-inputs');
+const remainEl  = document.getElementById('remain-count');
+
+/* ================================================================
+   [SETUP] プレイヤー名入力
+================================================================ */
+function updateNameInputs() {
+  const n = parseInt(countSel.value);
+  nameDiv.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement('div');
+    row.className = 'form-row';
+    row.innerHTML = `
+      <label>プレイヤー${i + 1}</label>
+      <input type="text" id="pname${i}" value="プレイヤー${i + 1}" placeholder="名前を入力">
+    `;
+    nameDiv.appendChild(row);
+  }
+}
+countSel.addEventListener('change', updateNameInputs);
+updateNameInputs();
+
+/* ================================================================
+   [SETUP] ゲーム開始
+================================================================ */
+document.getElementById('start-btn').addEventListener('click', startGame);
+
+async function startGame() {
+  const n = parseInt(countSel.value);
+  state.players = [];
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById(`pname${i}`);
+    state.players.push({ name: (el && el.value.trim()) || `プレイヤー${i + 1}`, collected: [] });
+  }
+  state.currentPlayer = 0;
+  state.flipped       = [];
+  state.animating     = true; // 配置アニメーション中はクリック無効
+
+  // シャッフルして盤面初期化
+  state.board = shuffle(CARDS.map(c => c.id)).map(cardId => ({
+    cardId,
+    faceUp: false,
+    collected: false,
+  }));
+
+  setupEl.classList.remove('active');
+  gameEl.classList.add('active');
+
+  renderBoard();
+  renderPlayerBar();
+  updateRemaining();
+
+  // 配置アニメーション完了を待つ（48枚 × 15ms ≈ 720ms + 余裕）
+  await sleep(900);
+
+  // 最初のプレイヤーのターンオーバーレイ
+  await showTurnOverlay(state.currentPlayer);
+  setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+  state.animating = false;
+}
+
+/* ================================================================
+   [RENDER] ゲーム盤面（初回のみ呼ぶ）
+================================================================ */
+function renderBoard() {
+  boardEl.innerHTML = '';
+  state.board.forEach((slot, idx) => {
+    const card = CARDS[slot.cardId];
+    const div  = document.createElement('div');
+    div.className  = 'card';
+    div.dataset.idx = idx;
+
+    // 配置アニメーション（ staggered delay ）
+    div.style.animation      = `dealIn 0.32s ease ${idx * 15}ms both`;
+    div.style.animationFillMode = 'backwards';
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    // 裏面
+    const back = document.createElement('div');
+    back.className = 'card-back';
+
+    // 表面
+    const typeClass = {
+      hikari:       'type-hikari',
+      tane:         'type-tane',
+      tanzaku_red:  'type-tanzaku-red',
+      tanzaku_blue: 'type-tanzaku-blue',
+      kasu:         'type-kasu',
+    }[card.type];
+    const badgeText = {
+      hikari:       '光',
+      tane:         '種',
+      tanzaku_red:  '短冊',
+      tanzaku_blue: '短冊',
+      kasu:         'カス',
+    }[card.type];
+    const face = document.createElement('div');
+    face.className = `card-face ${typeClass}`;
+    face.innerHTML = `
+      <div class="c-month">${card.month}月<br>${card.flower}</div>
+      <div class="c-name">${card.name}</div>
+      <div class="c-badge">${badgeText}</div>
+    `;
+
+    inner.appendChild(back);
+    inner.appendChild(face);
+    div.appendChild(inner);
+    div.addEventListener('click', () => onCardClick(idx));
+    boardEl.appendChild(div);
+  });
+}
+
+/* ================================================================
+   [RENDER] プレイヤーバー
+================================================================ */
+function renderPlayerBar() {
+  playerBar.innerHTML = '';
+  state.players.forEach((p, i) => {
+    const { total } = calculateYaku(p.collected);
+    const div = document.createElement('div');
+    div.className = 'player-card' + (i === state.currentPlayer ? ' active' : '');
+    div.innerHTML = `
+      <div class="pname">${p.name}</div>
+      <div class="pcount">${p.collected.length} 枚</div>
+      <div class="pscore">${total} 点</div>
+    `;
+    playerBar.appendChild(div);
+  });
+}
+
+function setStatus(msg) { statusEl.textContent = msg; }
+
+function updateRemaining() {
+  const n = state.board.filter(s => !s.collected).length;
+  remainEl.textContent = n;
+}
+
+/* ================================================================
+   [LOGIC] カードクリック処理
+================================================================ */
+async function onCardClick(idx) {
+  if (state.animating) return;
+  const slot = state.board[idx];
+  if (slot.faceUp || slot.collected) return;
+  if (state.flipped.length >= 2) return;
+
+  // めくる
+  slot.faceUp = true;
+  state.flipped.push(idx);
+  flipCardDOM(idx, true);
+
+  if (state.flipped.length < 2) return;
+
+  // ── 2枚めくり完了 ──
+  state.animating = true;
+  await sleep(700);
+
+  const [i1, i2] = state.flipped;
+  const c1 = CARDS[state.board[i1].cardId];
+  const c2 = CARDS[state.board[i2].cardId];
+
+  if (c1.month === c2.month) {
+    // ════ マッチ ════
+    setStatus(`${state.players[state.currentPlayer].name} が ${c1.month}月（${c1.flower}）を取得！`);
+    animateMatch(i1, i2);
+    await sleep(700);
+
+    // 回収
+    state.board[i1].collected = true;
+    state.board[i2].collected = true;
+    state.board[i1].faceUp    = false;
+    state.board[i2].faceUp    = false;
+    state.players[state.currentPlayer].collected.push(c1.id, c2.id);
+    hideCardDOM(i1);
+    hideCardDOM(i2);
+    renderPlayerBar();
+    updateRemaining();
+
+    state.flipped = [];
+
+    // ゲーム終了判定
+    if (state.board.every(s => s.collected)) {
+      await sleep(300);
+      showResult();
+      return;
+    }
+
+    // 次のターンへ
+    await advanceTurn();
+    state.animating = false;
+
+  } else {
+    // ════ ミス ════
+    setStatus('残念... 裏向きに戻します');
+    shakeCards(i1, i2);
+    await sleep(920);
+
+    state.board[i1].faceUp = false;
+    state.board[i2].faceUp = false;
+    flipCardDOM(i1, false);
+    flipCardDOM(i2, false);
+    await sleep(460);
+
+    state.flipped = [];
+    await advanceTurn();
+    state.animating = false;
+  }
+}
+
+/* ================================================================
+   [ANIM] DOM操作ヘルパー
+================================================================ */
+function flipCardDOM(idx, faceUp) {
+  const el = boardEl.querySelector(`.card[data-idx="${idx}"]`);
+  if (!el) return;
+  faceUp ? el.classList.add('flipped') : el.classList.remove('flipped');
+}
+
+function hideCardDOM(idx) {
+  const el = boardEl.querySelector(`.card[data-idx="${idx}"]`);
+  if (!el) return;
+  el.classList.remove('flipped', 'match-anim');
+  el.classList.add('gone');
+}
+
+function animateMatch(i1, i2) {
+  [i1, i2].forEach(idx => {
+    const el = boardEl.querySelector(`.card[data-idx="${idx}"]`);
+    if (!el) return;
+    el.classList.remove('match-anim');
+    void el.offsetWidth; // reflow でアニメーションリセット
+    el.classList.add('match-anim');
+  });
+}
+
+function shakeCards(i1, i2) {
+  [i1, i2].forEach(idx => {
+    const el = boardEl.querySelector(`.card[data-idx="${idx}"]`);
+    if (!el) return;
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  });
+}
+
+/* ================================================================
+   [LOGIC] ターン進行（オーバーレイ付き）
+================================================================ */
+async function advanceTurn() {
+  state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
+  renderPlayerBar();
+  await showTurnOverlay(state.currentPlayer);
+  setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+}
+
+/* ================================================================
+   [UI] ターン交代オーバーレイ
+================================================================ */
+function showTurnOverlay(playerIndex) {
+  return new Promise(resolve => {
+    const overlay  = document.getElementById('turn-overlay');
+    const nameEl   = document.getElementById('to-name');
+    const scoreEl  = document.getElementById('to-score');
+    const { total } = calculateYaku(state.players[playerIndex].collected);
+
+    nameEl.textContent  = state.players[playerIndex].name;
+    scoreEl.textContent = `現在 ${total} 点 ／ ${state.players[playerIndex].collected.length} 枚取得`;
+    overlay.classList.add('active');
+
+    const dismiss = () => {
+      overlay.classList.remove('active');
+      overlay.removeEventListener('click', dismiss);
+      resolve();
+    };
+    // 少し遅延させて誤タップを防ぐ
+    setTimeout(() => overlay.addEventListener('click', dismiss), 300);
+  });
+}
+
+/* ================================================================
+   [UI] 役一覧モーダル
+================================================================ */
+function buildYakuModal() {
+  const body = document.getElementById('yaku-modal-body');
+  body.innerHTML = '';
+  YAKU_GUIDE.forEach(section => {
+    const sec = document.createElement('div');
+    sec.innerHTML = `<div class="ym-section-title">${section.category}</div>`;
+    const rows = document.createElement('div');
+    rows.className = 'ym-rows';
+    section.rows.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'ym-row';
+      row.innerHTML = `
+        <div class="ym-yaku-name">${r.name}</div>
+        <div class="ym-yaku-desc">${r.desc}</div>
+        <div class="ym-yaku-pts">${r.pts}</div>
+      `;
+      rows.appendChild(row);
+    });
+    sec.appendChild(rows);
+    body.appendChild(sec);
+  });
+}
+
+document.getElementById('yaku-btn').addEventListener('click', () => {
+  buildYakuModal();
+  document.getElementById('yaku-modal').classList.add('active');
+});
+document.getElementById('yaku-close').addEventListener('click', () => {
+  document.getElementById('yaku-modal').classList.remove('active');
+});
+document.getElementById('yaku-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('yaku-modal')) {
+    document.getElementById('yaku-modal').classList.remove('active');
+  }
+});
+
+/* ================================================================
+   [UI] 結果画面
+================================================================ */
+function showResult() {
+  gameEl.classList.remove('active');
+  resultEl.classList.add('active');
+
+  const scores = state.players.map(p => {
+    const { yaku, total } = calculateYaku(p.collected);
+    return { name: p.name, count: p.collected.length, yaku, total };
+  }).sort((a, b) => b.total - a.total || b.count - a.count);
+
+  const rankKanji  = ['一', '二', '三', '四'];
+  const listEl     = document.getElementById('result-list');
+  listEl.innerHTML = '';
+
+  scores.forEach((p, rank) => {
+    const item  = document.createElement('div');
+    item.className = 'result-item' + (rank === 0 ? ' rank1' : '');
+    item.style.animationDelay = `${rank * 180}ms`;
+
+    // 役リスト（フェードイン）
+    const yakuHTML = p.yaku.length > 0
+      ? `<ul class="r-yaku-list">${
+          p.yaku.map((y, yi) =>
+            `<li style="animation-delay:${rank * 180 + 200 + yi * 80}ms">
+              ${y.name}：${y.points}点
+            </li>`
+          ).join('')
+        }</ul>`
+      : '<p class="no-yaku">役なし（0点）</p>';
+
+    // 同点表示
+    const sameScore = scores.filter(s => s.total === p.total);
+    const rankLabel = sameScore.length > 1 && rank > 0 && scores[rank - 1].total === p.total
+      ? `${rankKanji[rank]}位（同点）` : `${rankKanji[rank]}位`;
+
+    item.innerHTML = `
+      <div class="ri-header">
+        <span class="ri-rank">${rankLabel}</span>
+        <span class="ri-name">${p.name}</span>
+        <span class="ri-score">${p.total} 点</span>
+      </div>
+      <div class="ri-meta">取得枚数 ${p.count} 枚</div>
+      ${yakuHTML}
+    `;
+    listEl.appendChild(item);
+  });
+}
+
+/* ================================================================
+   [UI] リセット
+================================================================ */
+document.getElementById('replay-btn').addEventListener('click', () => {
+  resultEl.classList.remove('active');
+  setupEl.classList.add('active');
+  updateNameInputs();
+});
+</script>
+</body>
+</html>

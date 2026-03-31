@@ -1,0 +1,11 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+
+# デプロイ用ZIPは除外（手動管理）
+*.zip
