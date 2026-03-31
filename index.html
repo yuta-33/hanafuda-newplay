@@ -367,6 +367,35 @@
     }
     .card.match-anim .card-inner { animation: matchGlow 0.65s ease; }
 
+    /* ── ボーナスターン通知トースト ── */
+    @keyframes bonusPop {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      30%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+      70%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    }
+    #bonus-toast {
+      position: fixed;
+      top: 44%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10,5,0,0.92);
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 14px 32px;
+      color: var(--gold-light);
+      font-size: 1.4em;
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      z-index: 150;
+      display: none;
+      white-space: nowrap;
+    }
+    #bonus-toast.show {
+      display: block;
+      animation: bonusPop 0.9s ease forwards;
+    }
+
     /* ── ミスシェイク ── */
     @keyframes shake {
       0%,100% { transform: translateX(0); }
@@ -707,7 +736,7 @@
   <div class="rule-box">
     <div class="rb-title">遊び方</div>
     全48枚を裏向きに並べ、順番に2枚ずつめくります。<br>
-    <strong style="color:var(--gold)">同じ月の札</strong>ならもらえます。違う月なら裏向きに戻します。<br>
+    <strong style="color:var(--gold)">同じ月の札</strong>なら回収してもう1ターン！違う月なら裏向きに戻して次のプレイヤーへ。<br>
     場の札がなくなったらゲーム終了。<br>
     取得枚数ではなく、集めた札で作れる<strong style="color:var(--gold)">役のポイント</strong>で勝敗を決めます。
   </div>
@@ -727,6 +756,9 @@
   <div id="status">準備中...</div>
   <div id="board"></div>
 </div>
+
+<!-- ボーナスターントースト -->
+<div id="bonus-toast">もう1ターン！</div>
 
 <!-- ========================================================
      ターン交代オーバーレイ
@@ -1130,8 +1162,9 @@ async function onCardClick(idx) {
       return;
     }
 
-    // 次のターンへ
-    await advanceTurn();
+    // ボーナスターン：同じプレイヤーが続けてめくれる
+    await showBonusToast();
+    setStatus(`${state.players[state.currentPlayer].name} もう1ターンです！`);
     state.animating = false;
 
   } else {
@@ -1219,6 +1252,22 @@ function showTurnOverlay(playerIndex) {
     };
     // 少し遅延させて誤タップを防ぐ
     setTimeout(() => overlay.addEventListener('click', dismiss), 300);
+  });
+}
+
+/* ================================================================
+   [UI] ボーナスターントースト
+================================================================ */
+function showBonusToast() {
+  return new Promise(resolve => {
+    const toast = document.getElementById('bonus-toast');
+    toast.classList.remove('show');
+    void toast.offsetWidth; // reflow
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+      resolve();
+    }, 900);
   });
 }
 
