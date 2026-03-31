@@ -13,20 +13,21 @@
       --card-w: 78px;
       --card-h: 112px;
       --gap: 6px;
-      --bg: #0f0700;
-      --gold: #d4a843;
-      --gold-light: #ffd770;
-      --text: #f0e6d3;
-      --text-muted: #a08060;
-      --border: #5c3a00;
-      --panel: rgba(255,255,255,0.06);
+      --bg: #1a0e06;
+      --gold: #e8c060;
+      --gold-light: #ffe888;
+      --text: #f8eedd;
+      --text-muted: #c8a870;
+      --border: #a06c2a;
+      --panel: rgba(255,185,70,0.13);
       --radius: 8px;
     }
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'YuMincho', 'MS Mincho', serif;
-      background: var(--bg);
+      background: radial-gradient(ellipse at top, #2a1408 0%, #1a0e06 60%, #0f0804 100%);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
       user-select: none;
@@ -441,39 +442,39 @@
 
     /* カード種別スタイル */
     .type-hikari {
-      background: linear-gradient(155deg, #5a3800, #c8880a);
-      border-color: #d4a843 !important;
+      background: linear-gradient(155deg, #6a4400, #d89818);
+      border-color: #f0c840 !important;
       color: #fff8e0;
     }
-    .type-hikari .c-badge { background: #ffd700; color: #3a1f00; }
+    .type-hikari .c-badge { background: #f8d820; color: #3a1f00; }
 
     .type-tane {
-      background: linear-gradient(155deg, #0d2d0d, #1e5c1e);
-      border-color: #2d7a2d !important;
-      color: #d0f0d0;
+      background: linear-gradient(155deg, #0e3a0e, #287828);
+      border-color: #48b048 !important;
+      color: #d8ffd8;
     }
-    .type-tane .c-badge { background: #3a9a3a; color: #e0ffe0; }
+    .type-tane .c-badge { background: #3ab83a; color: #e8ffe8; }
 
     .type-tanzaku-red {
-      background: linear-gradient(155deg, #2d0505, #6e1010);
-      border-color: #9a2020 !important;
-      color: #ffd8d8;
+      background: linear-gradient(155deg, #3a0808, #8a1818);
+      border-color: #cc3030 !important;
+      color: #ffe0e0;
     }
-    .type-tanzaku-red .c-badge { background: #cc2222; color: #ffe8e8; }
+    .type-tanzaku-red .c-badge { background: #e02828; color: #ffe8e8; }
 
     .type-tanzaku-blue {
-      background: linear-gradient(155deg, #050520, #101060);
-      border-color: #2020a0 !important;
-      color: #d8d8ff;
+      background: linear-gradient(155deg, #080828, #181880);
+      border-color: #4040cc !important;
+      color: #dde0ff;
     }
-    .type-tanzaku-blue .c-badge { background: #2233cc; color: #e0e8ff; }
+    .type-tanzaku-blue .c-badge { background: #3348e0; color: #e8eeff; }
 
     .type-kasu {
-      background: linear-gradient(155deg, #1a1810, #3a3520);
-      border-color: #5a5540 !important;
-      color: #e0d8c0;
+      background: linear-gradient(155deg, #28241a, #504a38);
+      border-color: #807860 !important;
+      color: #f0e8d0;
     }
-    .type-kasu .c-badge { background: #706850; color: #f0ead8; }
+    .type-kasu .c-badge { background: #887868; color: #f8f0e0; }
 
     /* ===========================
        5. アニメーション
@@ -2202,7 +2203,7 @@ function kkStartGame() {
   kkStartRound();
 }
 
-function kkStartRound() {
+async function kkStartRound() {
   kkState.p.forEach(p => { p.hand=[]; p.collected=[]; p.koikoi=false; });
   kkState.field=[]; kkState.deck=[];
   kkState.cur = (kkState.round - 1) % 2;
@@ -2216,8 +2217,18 @@ function kkStartRound() {
   kkState.field     = deck48.splice(0, 8);
   kkState.deck      = deck48; // 残り24
 
-  kkRenderAll();
-  kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！${kkState.p[kkState.cur].name} の番`);
+  // ローカル2人のラウンド開始時は手札を隠してオーバーレイ表示
+  if (!kkState.npc) {
+    kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderYaku();
+    document.getElementById('kk-player-hand').innerHTML = '';
+    kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！`);
+    kkState.phase = 'hand-select';
+    await kkShowTurnOverlay();
+    kkRenderAll();
+  } else {
+    kkRenderAll();
+    kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！${kkState.p[kkState.cur].name} の番`);
+  }
   kkState.phase = 'hand-select';
   kkCheckNpc();
 }
@@ -2270,10 +2281,15 @@ function kkRenderPlayer() {
   const area = document.getElementById('kk-player-hand');
   document.getElementById('kk-player-label').textContent = `${kkState.p[kkState.cur].name} 手札`;
   area.innerHTML = '';
-  kkState.p[kkState.cur].hand.forEach(cid => {
-    const isSel = kkState.selHand === cid;
-    area.appendChild(kkCardEl(cid, isSel ? 'selected' : '', () => kkOnHandClick(cid)));
-  });
+  // NPC のターン中は NPC の手札を裏向きで表示
+  if (kkState.npc && kkState.cur === kkState.npcIdx) {
+    kkState.p[kkState.cur].hand.forEach(() => area.appendChild(kkFaceDown()));
+  } else {
+    kkState.p[kkState.cur].hand.forEach(cid => {
+      const isSel = kkState.selHand === cid;
+      area.appendChild(kkCardEl(cid, isSel ? 'selected' : '', () => kkOnHandClick(cid)));
+    });
+  }
 }
 
 function kkRenderYaku() {
@@ -2481,11 +2497,35 @@ async function kkNextTurn() {
   kkState.cur = 1 - kkState.cur;
   kkState.selHand = null; kkState.drawnCard = null; kkState.matchCands = [];
   kkState.phase = 'hand-select';
+
+  // ローカル2人 & 人間のターンはオーバーレイで手札を隠す
+  if (!kkState.npc) {
+    kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderYaku();
+    document.getElementById('kk-player-hand').innerHTML = '';  // 手札を隠す
+    await kkShowTurnOverlay();
+  }
+
   kkRenderAll();
   kkSetStatus(`${kkState.p[kkState.cur].name} のターン`);
-  await sleep(300);
+  await sleep(200);
   kkState.animating = false;
   kkCheckNpc();
+}
+
+function kkShowTurnOverlay() {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('turn-overlay');
+    document.getElementById('to-name').textContent  = kkState.p[kkState.cur].name;
+    const { total } = calculateYaku(kkState.p[kkState.cur].collected);
+    document.getElementById('to-score').textContent =
+      `累計 ${kkState.p[kkState.cur].totalScore} 点 ／ 今ラウンド役 ${total} 点`;
+    overlay.classList.add('active');
+    setTimeout(() => overlay.addEventListener('click', function dismiss() {
+      overlay.classList.remove('active');
+      overlay.removeEventListener('click', dismiss);
+      resolve();
+    }), 300);
+  });
 }
 
 /* ================================================================
