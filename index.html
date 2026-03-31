@@ -240,10 +240,12 @@
       display: none;
       flex-direction: column;
       align-items: center;
-      padding: 10px 8px 20px;
+      padding: 8px 6px 16px;
       min-height: 100vh;
     }
     #game.active { display: flex; }
+    /* ゲームヘッダーとステータス: アリーナに合わせてmax-width解除 */
+    #game > #status { width: 100%; max-width: 900px; }
 
     /* ゲームヘッダー（役一覧 + 残り枚数） */
     #game-header {
@@ -251,8 +253,8 @@
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      max-width: 740px;
-      margin-bottom: 8px;
+      max-width: 900px;
+      margin-bottom: 6px;
       padding: 0 4px;
     }
     #remaining {
@@ -601,6 +603,61 @@
     #turn-overlay .to-hint { animation: pulse 1.6s ease infinite; }
 
     /* ===========================
+       6b. 神経衰弱アリーナ（プレイヤーパネル配置）
+    =========================== */
+    #mem-arena {
+      display: flex; flex-direction: column; gap: 5px;
+      width: 100%; align-items: center;
+    }
+    .mem-row-mid {
+      display: flex; gap: 5px; align-items: flex-start; width: 100%;
+    }
+    #mem-board-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
+    /* 各プレイヤーパネル共通 */
+    .mem-panel {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 7px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .mem-panel.mem-hidden { display: none; }
+    /* 縦パネル（左・右） */
+    .mem-panel-v {
+      width: 128px; flex-shrink: 0;
+      overflow-y: auto; max-height: 520px;
+      position: sticky; top: 4px;
+    }
+    /* 横パネル（上・下） */
+    .mem-panel-h {
+      width: 100%; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start;
+    }
+    /* パネル内コンテンツ */
+    .mem-pn-name {
+      font-size: 0.66em; color: var(--gold); font-weight: bold;
+      letter-spacing: 0.04em; margin-bottom: 4px;
+      border-bottom: 1px solid rgba(160,108,42,0.35); padding-bottom: 3px;
+    }
+    /* 横パネル内は各プレイヤーセクションが横並び */
+    .mem-panel-h .mem-pn-player {
+      display: flex; flex-direction: column; min-width: 120px;
+    }
+    .mem-pn-type-block { margin-top: 4px; }
+    .mem-pn-type-label {
+      font-size: 0.54em; font-weight: bold; margin-bottom: 2px;
+      letter-spacing: 0.04em; display: flex; align-items: center; gap: 3px;
+    }
+    .mem-pn-type-label::after {
+      content: ''; flex: 1; height: 1px; background: currentColor; opacity: 0.25;
+    }
+    .mem-pn-cards { display: flex; flex-wrap: wrap; gap: 2px; }
+    .mem-pn-card {
+      width: 32px; height: 46px; border-radius: 3px; overflow: hidden;
+      border: 1px solid #604020; flex-shrink: 0;
+    }
+    .mem-pn-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mem-pn-empty { font-size: 0.6em; color: var(--text-muted); font-style: italic; padding: 4px 0; }
+
+    /* ===========================
        7. 役一覧モーダル
     =========================== */
     #yaku-modal {
@@ -855,6 +912,43 @@
       min-height: 100vh; padding: 6px 8px 14px; gap: 5px;
     }
     #koikoi-game.active { display: flex; }
+
+    /* 左右パネルレイアウト */
+    .kk-main-layout {
+      display: flex; gap: 7px; flex: 1; align-items: flex-start;
+    }
+    .kk-sb-section {
+      width: 128px; flex-shrink: 0;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 5px;
+      position: sticky; top: 6px;
+      max-height: calc(100vh - 60px); overflow-y: auto;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .kk-sb-name {
+      font-size: 0.64em; color: var(--gold); font-weight: bold;
+      text-align: center; letter-spacing: 0.04em;
+      border-bottom: 1px solid rgba(160,108,42,0.35);
+      padding-bottom: 4px; margin-bottom: 5px;
+    }
+    .kk-sb-type-block { margin-top: 5px; }
+    .kk-sb-type-label {
+      font-size: 0.55em; font-weight: bold; letter-spacing: 0.05em;
+      margin-bottom: 3px; display: flex; align-items: center; gap: 3px;
+    }
+    .kk-sb-type-label::after {
+      content: ''; flex: 1; height: 1px; background: currentColor; opacity: 0.3;
+    }
+    .kk-sb-cards-row { display: flex; flex-wrap: wrap; gap: 2px; }
+    .kk-sb-empty {
+      font-size: 0.58em; color: var(--text-muted);
+      font-style: italic; text-align: center; padding: 6px 0;
+    }
+    /* 中央コンテンツ */
+    .kk-center {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 5px;
+    }
     .kk-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 2px 2px 5px; border-bottom: 1px solid var(--border); gap: 6px;
@@ -930,6 +1024,18 @@
     .kk-card.face-down:hover { transform: none; box-shadow: none; }
     .kk-card.gone { display: none; }
     .kk-card.match-flash { animation: kk-glow 0.55s ease; }
+    /* マッチ取得演出 */
+    .kk-card.kk-collecting {
+      animation: kk-collect 0.45s ease forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @keyframes kk-collect {
+      0%   { transform: scale(1) translateY(0); box-shadow: 0 0 0 rgba(255,215,0,0); }
+      40%  { transform: scale(1.18) translateY(-6px); box-shadow: 0 0 22px rgba(255,215,0,1); }
+      70%  { transform: scale(1.12) translateY(-4px); opacity: 1; }
+      100% { transform: scale(0.6) translateY(0); opacity: 0; }
+    }
     @keyframes kk-pulse {
       0%,100% { box-shadow: 0 0 5px rgba(96,224,96,0.4); }
       50%      { box-shadow: 0 0 14px rgba(96,224,96,0.9); }
@@ -941,6 +1047,35 @@
     }
     .kk-yaku-bar { font-size: 0.7em; color: var(--text-muted); margin-top: 3px; min-height: 16px; }
     .kk-yaku-bar em { color: var(--gold-light); font-style: normal; }
+
+    /* サイドバー内カードサイズ */
+    .kk-card.mini {
+      width: 34px; height: 48px; border-radius: 3px;
+      cursor: default; border-color: #604020;
+    }
+    .kk-card.mini:hover { transform: none; box-shadow: none; }
+    .kk-card.mini.face-down { background: linear-gradient(145deg, #2a1400, #4e2c00); }
+
+    /* ドラッグ＆ドロップ */
+    .kk-card[draggable="true"] { cursor: grab; }
+    .kk-card[draggable="true"]:active { cursor: grabbing; }
+    .kk-card.drag-source { opacity: 0.35; }
+    .kk-card.drag-match {
+      border-color: #70e870 !important;
+      animation: kk-pulse 0.7s ease infinite;
+    }
+    .kk-card.drop-target {
+      border-color: #a0ffa0 !important;
+      box-shadow: 0 0 20px rgba(128,255,128,0.95) !important;
+      transform: translateY(-8px) scale(1.07) !important;
+      transition: none;
+    }
+    #kk-field-cards.drag-no-match {
+      outline: 2px dashed rgba(96,200,96,0.55);
+      border-radius: 6px;
+      background: rgba(96,200,96,0.06);
+    }
+
     .kk-status-bar {
       text-align: center; font-size: 0.92em; color: var(--gold-light);
       letter-spacing: 0.05em; min-height: 24px; padding: 2px 4px;
@@ -1119,9 +1254,23 @@
     <button class="btn-sm" id="yaku-btn">役一覧</button>
     <div id="remaining">残り <span id="remain-count">48</span> 枚</div>
   </div>
-  <div id="player-bar"></div>
   <div id="status">準備中...</div>
-  <div id="board"></div>
+  <!-- アリーナ：プレイヤーパネルを四方に配置 -->
+  <div id="mem-arena">
+    <!-- 上パネル（3〜4人目：P3） -->
+    <div id="mem-panel-top" class="mem-panel mem-panel-h mem-hidden"></div>
+    <!-- 中段：左パネル + ボード + 右パネル -->
+    <div class="mem-row-mid">
+      <div id="mem-panel-left" class="mem-panel mem-panel-v mem-hidden"></div>
+      <div id="mem-board-col">
+        <div id="player-bar"></div>
+        <div id="board"></div>
+      </div>
+      <div id="mem-panel-right" class="mem-panel mem-panel-v mem-hidden"></div>
+    </div>
+    <!-- 下パネル（3〜4人：P1、2人のときは使わない） -->
+    <div id="mem-panel-bottom" class="mem-panel mem-panel-h mem-hidden"></div>
+  </div>
 </div>
 
 <!-- ========================================================
@@ -1188,34 +1337,44 @@
       <div class="kk-score-chip" id="kk-score-1">P2: 0pt</div>
     </div>
   </div>
-  <!-- 相手エリア -->
-  <div class="kk-area">
-    <div class="kk-area-label" id="kk-opp-label">相手 手札</div>
-    <div class="kk-hand-row" id="kk-opp-hand"></div>
-    <div class="kk-yaku-bar" id="kk-yaku-top">役: なし</div>
-  </div>
-  <!-- 場エリア -->
-  <div class="kk-field-area">
-    <div class="kk-area-label">場の札</div>
-    <div class="kk-middle">
-      <div class="kk-field-cards" id="kk-field-cards"></div>
-      <div class="kk-deck-col">
-        <div class="kk-deck-pile">
-          <div class="kk-deck-count" id="kk-deck-count">24</div>
-          <div class="kk-deck-lbl">山札</div>
-        </div>
-        <div class="kk-drawn-slot" id="kk-drawn-slot"></div>
+  <!-- メインレイアウト（自分=左、中央=ゲーム、相手=右） -->
+  <div class="kk-main-layout">
+    <!-- 左パネル：自分の取得済み -->
+    <div class="kk-sb-section" id="kk-sb-p0"></div>
+    <!-- 中央：ゲームエリア -->
+    <div class="kk-center">
+      <!-- 相手エリア -->
+      <div class="kk-area">
+        <div class="kk-area-label" id="kk-opp-label">相手 手札</div>
+        <div class="kk-hand-row" id="kk-opp-hand"></div>
+        <div class="kk-yaku-bar" id="kk-yaku-top">役: なし</div>
       </div>
+      <!-- 場エリア -->
+      <div class="kk-field-area">
+        <div class="kk-area-label">場の札</div>
+        <div class="kk-middle">
+          <div class="kk-field-cards" id="kk-field-cards"></div>
+          <div class="kk-deck-col">
+            <div class="kk-deck-pile">
+              <div class="kk-deck-count" id="kk-deck-count">24</div>
+              <div class="kk-deck-lbl">山札</div>
+            </div>
+            <div class="kk-drawn-slot" id="kk-drawn-slot"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 自分エリア -->
+      <div class="kk-area">
+        <div class="kk-yaku-bar" id="kk-yaku-bottom">役: なし</div>
+        <div class="kk-hand-row" id="kk-player-hand"></div>
+        <div class="kk-area-label" id="kk-player-label">あなた 手札</div>
+      </div>
+      <!-- ステータス -->
+      <div class="kk-status-bar" id="kk-status">準備中...</div>
     </div>
+    <!-- 右パネル：相手の取得済み -->
+    <div class="kk-sb-section" id="kk-sb-p1"></div>
   </div>
-  <!-- 自分エリア -->
-  <div class="kk-area">
-    <div class="kk-yaku-bar" id="kk-yaku-bottom">役: なし</div>
-    <div class="kk-hand-row" id="kk-player-hand"></div>
-    <div class="kk-area-label" id="kk-player-label">あなた 手札</div>
-  </div>
-  <!-- ステータス -->
-  <div class="kk-status-bar" id="kk-status">準備中...</div>
 </div>
 
 <!-- こいこい/勝負ダイアログ -->
@@ -1610,10 +1769,6 @@ async function startGame() {
   // 配置アニメーション完了を待つ（48枚 × 15ms ≈ 720ms + 余裕）
   await sleep(900);
 
-  // 最初のプレイヤーのターンオーバーレイ
-  if (!memNpc.enabled || state.currentPlayer !== 1) {
-    await showTurnOverlay(state.currentPlayer);
-  }
   setStatus(`${state.players[state.currentPlayer].name} のターンです`);
   state.animating = false;
   checkNpcTurn();
@@ -1695,6 +1850,7 @@ function renderPlayerBar() {
     `;
     playerBar.appendChild(div);
   });
+  renderCollectedPanel();
 }
 
 function setStatus(msg) { statusEl.textContent = msg; }
@@ -1702,6 +1858,108 @@ function setStatus(msg) { statusEl.textContent = msg; }
 function updateRemaining() {
   const n = state.board.filter(s => !s.collected).length;
   remainEl.textContent = n;
+}
+
+/* ================================================================
+   プレイヤーパネル配置
+   2人: P0=左, P1=右
+   3人: P0=下, P1=左, P2=上
+   4人: P0=下, P1=左, P2=上, P3=右
+================================================================ */
+const MEM_PANEL_POS = {
+  2: ['left',   'right'],
+  3: ['bottom', 'left',  'top'],
+  4: ['bottom', 'left',  'top', 'right'],
+};
+const MEM_TYPE_GROUPS = [
+  { label: '光',  types: ['hikari'],                     color: '#ffe060' },
+  { label: '絵札', types: ['tane'],                      color: '#70e090' },
+  { label: '短冊', types: ['tanzaku_red','tanzaku_blue'], color: '#ff9898' },
+  { label: 'タネ', types: ['kasu'],                      color: '#a09070' },
+];
+
+function buildPlayerPanelContent(player, playerIdx, isHorizontal) {
+  const wrap = isHorizontal ? document.createElement('div') : document.createDocumentFragment();
+  if (isHorizontal) wrap.className = 'mem-pn-player';
+
+  const { total } = calculateYaku(player.collected);
+  const isActive = playerIdx === state.currentPlayer;
+
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'mem-pn-name';
+  nameDiv.innerHTML = `${player.name}<span style="color:var(--gold-light);margin-left:4px">${total}pt</span>`;
+  wrap.appendChild(nameDiv);
+
+  if (player.collected.length === 0) {
+    const em = document.createElement('div');
+    em.className = 'mem-pn-empty';
+    em.textContent = 'まだ取得なし';
+    wrap.appendChild(em);
+  } else {
+    MEM_TYPE_GROUPS.forEach(g => {
+      const cards = player.collected
+        .filter(cid => g.types.includes(CARDS[cid].type))
+        .sort((a, b) => CARDS[a].month - CARDS[b].month);
+      if (!cards.length) return;
+
+      const block = document.createElement('div');
+      block.className = 'mem-pn-type-block';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'mem-pn-type-label';
+      lbl.style.color = g.color;
+      lbl.textContent = `${g.label}（${cards.length}）`;
+      block.appendChild(lbl);
+
+      const row = document.createElement('div');
+      row.className = 'mem-pn-cards';
+      cards.forEach(cid => {
+        const card = document.createElement('div');
+        card.className = 'mem-pn-card';
+        const img = document.createElement('img');
+        img.src = `assets/cards/${String(cid).padStart(2,'0')}.png`;
+        img.onerror = () => { img.style.display = 'none'; card.style.background = '#3a2010'; };
+        card.appendChild(img);
+        row.appendChild(card);
+      });
+      block.appendChild(row);
+      wrap.appendChild(block);
+    });
+  }
+  return { wrap, isActive };
+}
+
+function renderCollectedPanel() {
+  const n = state.players.length;
+  const positions = MEM_PANEL_POS[n] || MEM_PANEL_POS[2];
+
+  // 全パネルを一旦隠す
+  ['top','left','right','bottom'].forEach(pos => {
+    const el = document.getElementById(`mem-panel-${pos}`);
+    if (el) { el.classList.add('mem-hidden'); el.innerHTML = ''; }
+  });
+
+  // 各プレイヤーをパネルに割り当て
+  state.players.forEach((p, pi) => {
+    const pos = positions[pi];
+    const panelEl = document.getElementById(`mem-panel-${pos}`);
+    if (!panelEl) return;
+
+    const isHoriz = pos === 'top' || pos === 'bottom';
+    const { wrap, isActive } = buildPlayerPanelContent(p, pi, isHoriz);
+
+    panelEl.classList.remove('mem-hidden');
+    panelEl.style.borderColor = isActive ? 'var(--gold)' : 'var(--border)';
+    panelEl.style.boxShadow   = isActive ? '0 0 10px rgba(212,168,67,0.28)' : 'none';
+
+    // 横パネルは複数プレイヤーが並ぶので追加、縦パネルは1人のみ
+    if (isHoriz) {
+      panelEl.appendChild(wrap);
+    } else {
+      panelEl.innerHTML = '';
+      panelEl.appendChild(wrap);
+    }
+  });
 }
 
 /* ================================================================
@@ -1822,12 +2080,8 @@ function shakeCards(i1, i2) {
 async function advanceTurn() {
   state.currentPlayer = (state.currentPlayer + 1) % state.players.length;
   renderPlayerBar();
-  if (memNpc.enabled && state.currentPlayer === 1) {
-    setStatus(`${state.players[1].name} のターン...`);
-  } else {
-    await showTurnOverlay(state.currentPlayer);
-    setStatus(`${state.players[state.currentPlayer].name} のターンです`);
-  }
+  setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+  await sleep(300);
 }
 
 function checkNpcTurn() {
@@ -2096,6 +2350,8 @@ const kkState = {
   field: [], deck: [],
   round: 1, totalRounds: 12,
   cur: 0,
+  oya: 0,           // 親（先行）プレイヤーインデックス
+  lastRoundWinner: null, // 直近ラウンドの勝者（null=引き分け）
   phase: 'idle',
   selHand: null, drawnCard: null, matchCands: [],
   prevYaku: [[], []],
@@ -2197,6 +2453,9 @@ function kkStartGame() {
   kkState.totalRounds = period;
   kkState.round  = 1;
   kkState.history = [];
+  kkState.lastRoundWinner = null;
+  // 1ラウンド目はランダムで親を決める
+  kkState.oya = Math.random() < 0.5 ? 0 : 1;
 
   document.getElementById('koikoi-setup').classList.remove('active');
   document.getElementById('koikoi-game').classList.add('active');
@@ -2206,7 +2465,17 @@ function kkStartGame() {
 async function kkStartRound() {
   kkState.p.forEach(p => { p.hand=[]; p.collected=[]; p.koikoi=false; });
   kkState.field=[]; kkState.deck=[];
-  kkState.cur = (kkState.round - 1) % 2;
+
+  // 親決定：1ラウンド目はゲーム開始時にランダム設定済み。
+  // 2ラウンド目以降：直近の勝者が親。引き分けは親不変。
+  if (kkState.round > 1) {
+    if (kkState.lastRoundWinner !== null) {
+      kkState.oya = kkState.lastRoundWinner;
+    }
+    // 引き分けの場合は oya を引き継ぐ（変更なし）
+  }
+  kkState.cur = kkState.oya;
+
   kkState.phase = 'idle';
   kkState.selHand=null; kkState.drawnCard=null; kkState.matchCands=[];
   kkState.prevYaku=[[],[]]; kkState.koikoiBy=null; kkState.animating=false;
@@ -2238,6 +2507,7 @@ async function kkStartRound() {
 ================================================================ */
 function kkRenderAll() {
   kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderPlayer(); kkRenderYaku();
+  kkRenderSidebar();
 }
 
 function kkRenderHeader() {
@@ -2251,13 +2521,91 @@ function kkRenderHeader() {
   c1.className = 'kk-score-chip' + (kkState.cur===1?' cur':'');
 }
 
+/* ================================================================
+   [KK] 左サイドバー（取得済み札 by タイプ）
+================================================================ */
+const KK_SIDEBAR_GROUPS = [
+  { label: '光',  types: ['hikari'],                    color: '#ffe060' },
+  { label: 'タネ', types: ['tane'],                     color: '#70e090' },
+  { label: '短冊', types: ['tanzaku_red','tanzaku_blue'], color: '#ff9898' },
+  { label: 'カス', types: ['kasu'],                     color: '#a09070' },
+];
+
+function kkRenderSidebar() {
+  [0, 1].forEach(pi => {
+    const section = document.getElementById(`kk-sb-p${pi}`);
+    if (!section) return;
+    section.innerHTML = '';
+
+    const { total } = calculateYaku(kkState.p[pi].collected);
+    const isCur = kkState.npc ? pi === 0 : pi === kkState.cur;
+
+    // 名前 + 点数
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'kk-sb-name';
+    nameDiv.innerHTML = `${kkState.p[pi].name}<br><span style="color:var(--gold-light)">${total}pt</span>`;
+    section.appendChild(nameDiv);
+
+    // アクティブ枠線
+    section.style.borderColor = isCur ? 'var(--gold)' : 'var(--border)';
+    section.style.boxShadow  = isCur ? '0 0 10px rgba(212,168,67,0.3)' : 'none';
+
+    if (kkState.p[pi].collected.length === 0) {
+      const em = document.createElement('div');
+      em.className = 'kk-sb-empty';
+      em.textContent = 'まだ取得なし';
+      section.appendChild(em);
+      return;
+    }
+
+    // タイプ別グループ表示
+    KK_SIDEBAR_GROUPS.forEach(group => {
+      const cards = kkState.p[pi].collected
+        .filter(cid => group.types.includes(CARDS[cid].type))
+        .sort((a, b) => CARDS[a].month - CARDS[b].month);
+      if (cards.length === 0) return;
+
+      const block = document.createElement('div');
+      block.className = 'kk-sb-type-block';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'kk-sb-type-label';
+      lbl.style.color = group.color;
+      lbl.textContent = `${group.label}（${cards.length}）`;
+      block.appendChild(lbl);
+
+      const row = document.createElement('div');
+      row.className = 'kk-sb-cards-row';
+      cards.forEach(cid => row.appendChild(kkCardEl(cid, 'mini no-interact')));
+      block.appendChild(row);
+      section.appendChild(block);
+    });
+  });
+}
+
+/* 裏向きカード要素を生成 */
+function kkCardBackEl() {
+  const el = document.createElement('div');
+  el.className = 'kk-card face-down mini no-interact';
+  const img = document.createElement('img');
+  img.src = 'assets/cards/back.png';
+  img.alt = '裏面';
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+  img.onerror = () => { img.style.display = 'none'; };
+  el.appendChild(img);
+  return el;
+}
+
+
 function kkRenderOpp() {
-  const opp = 1 - kkState.cur;
-  document.getElementById('kk-opp-label').textContent = `${kkState.p[opp].name} 手札 (${kkState.p[opp].hand.length}枚)`;
-  const area = document.getElementById('kk-opp-hand');
-  area.innerHTML = '';
-  // 相手の手札は常に裏向き（パスプレイ方式）
-  kkState.p[opp].hand.forEach(() => area.appendChild(kkFaceDown()));
+  // NPC対戦では常にPlayer1(NPC)、ローカル2人では相手側
+  const opp = kkState.npc ? 1 : (1 - kkState.cur);
+  document.getElementById('kk-opp-label').textContent =
+    `${kkState.p[opp].name}　手札 ${kkState.p[opp].hand.length}枚`;
+  // 相手の手札は裏向きで枚数だけ表示
+  const handArea = document.getElementById('kk-opp-hand');
+  handArea.innerHTML = '';
+  kkState.p[opp].hand.forEach(() => handArea.appendChild(kkCardBackEl()));
 }
 
 function kkRenderField() {
@@ -2265,8 +2613,37 @@ function kkRenderField() {
   el.innerHTML = '';
   kkState.field.forEach(cid => {
     const isMatchable = kkState.matchCands.includes(cid);
-    el.appendChild(kkCardEl(cid, isMatchable ? 'matchable' : '', () => kkOnFieldClick(cid)));
+    const card = kkCardEl(cid, isMatchable ? 'matchable' : '', () => kkOnFieldClick(cid));
+
+    // 各フィールドカードへのドラッグ受け取り
+    card.addEventListener('dragover', (e) => {
+      e.stopPropagation(); // コンテナへのバブリングを防ぐ
+      if (kkDragCard !== null && CARDS[kkDragCard].month === CARDS[cid].month) {
+        e.preventDefault(); // マッチ時のみドロップ許可カーソル
+        card.classList.add('drop-target');
+      }
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // コンテナへのバブリングを防ぐ
+      card.classList.remove('drop-target');
+      if (kkDragCard !== null && CARDS[kkDragCard].month === CARDS[cid].month) {
+        const dragged = kkDragCard;
+        kkDragCard = null; kkDragClear();
+        kkState.selHand = dragged;
+        const matches = kkState.field.filter(f => CARDS[f].month === CARDS[dragged].month);
+        kkPlayToField(dragged, matches.length >= 3 ? matches : [cid]);
+      } else {
+        // マッチしないカードの上にドロップした場合はキャンセル
+        kkDragCard = null; kkDragClear();
+        kkSetStatus('同じ月のカードにドロップするか、空きエリアに捨ててください');
+      }
+    });
+
+    el.appendChild(card);
   });
+  // ※ コンテナ自体のdragover/dropは kkInitFieldDrop() で1回のみ登録
 }
 
 function kkRenderDeck() {
@@ -2279,23 +2656,48 @@ function kkRenderDeck() {
 
 function kkRenderPlayer() {
   const area = document.getElementById('kk-player-hand');
-  document.getElementById('kk-player-label').textContent = `${kkState.p[kkState.cur].name} 手札`;
+  // NPC対戦では常にPlayer0(人間)、ローカル2人では現在のプレイヤー
+  const pi = kkState.npc ? 0 : kkState.cur;
+  document.getElementById('kk-player-label').textContent = `${kkState.p[pi].name} 手札`;
   area.innerHTML = '';
-  // NPC のターン中は NPC の手札を裏向きで表示
-  if (kkState.npc && kkState.cur === kkState.npcIdx) {
-    kkState.p[kkState.cur].hand.forEach(() => area.appendChild(kkFaceDown()));
-  } else {
-    kkState.p[kkState.cur].hand.forEach(cid => {
-      const isSel = kkState.selHand === cid;
-      area.appendChild(kkCardEl(cid, isSel ? 'selected' : '', () => kkOnHandClick(cid)));
-    });
-  }
+
+  // 自分のターンかどうか（animatingは内部ガードに任せる）
+  const isMyTurn = kkState.cur === pi;
+
+  kkState.p[pi].hand.forEach(cid => {
+    const isSel = kkState.selHand === cid;
+    // クリックハンドラは常に追加（kkOnHandClick内でanimating/phaseチェック済み）
+    const extra = isSel ? 'selected' : (isMyTurn ? '' : 'no-interact');
+    const el = kkCardEl(cid, extra, () => kkOnHandClick(cid));
+
+    // 自分のターンかつ手札選択フェーズのみドラッグ有効
+    if (isMyTurn && kkState.phase === 'hand-select') {
+      el.draggable = true;
+      el.addEventListener('dragstart', (e) => {
+        if (kkState.animating || kkState.phase !== 'hand-select') { e.preventDefault(); return; }
+        kkDragCard = cid;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => el.classList.add('drag-source'), 0);
+        kkDragHighlight(cid);
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('drag-source');
+        kkDragClear();
+        kkDragCard = null;
+      });
+    }
+
+    area.appendChild(el);
+  });
+
 }
 
 function kkRenderYaku() {
-  const opp = 1 - kkState.cur;
-  document.getElementById('kk-yaku-top').innerHTML    = kkYakuText(opp);
-  document.getElementById('kk-yaku-bottom').innerHTML = kkYakuText(kkState.cur);
+  // NPC対戦では常にPlayer1が上、Player0が下
+  const oppIdx    = kkState.npc ? 1 : (1 - kkState.cur);
+  const playerIdx = kkState.npc ? 0 : kkState.cur;
+  document.getElementById('kk-yaku-top').innerHTML    = kkYakuText(oppIdx);
+  document.getElementById('kk-yaku-bottom').innerHTML = kkYakuText(playerIdx);
 }
 
 function kkYakuText(pi) {
@@ -2348,17 +2750,33 @@ async function kkPlayToField(handCid, matchFieldIds) {
   kkState.p[kkState.cur].hand = kkState.p[kkState.cur].hand.filter(id => id !== handCid);
 
   if (matchFieldIds.length > 0) {
+    // ── マッチ演出：一旦フィールドに手札を置いて重なりを見せる ──
+    // 手札カードを一時的にフィールドへ追加して描画
+    kkState.field.push(handCid);
+    kkRenderAll();
+    // フィールド上でマッチしたカードと手札カードに収集アニメーション
+    const allMatchIds = [handCid, ...matchFieldIds];
+    allMatchIds.forEach(cid => {
+      const el = document.querySelector(`#kk-field-cards .kk-card[data-cardid="${cid}"]`);
+      if (el) el.classList.add('kk-collecting');
+    });
+    kkSetStatus(`${kkState.p[kkState.cur].name} → ${CARDS[handCid].month}月（${CARDS[handCid].flower}）取得！`);
+    await sleep(500);
+    // 実際に取得処理
+    kkState.field = kkState.field.filter(id => id !== handCid);
     matchFieldIds.forEach(fid => {
       kkState.field = kkState.field.filter(id => id !== fid);
       kkState.p[kkState.cur].collected.push(fid);
     });
     kkState.p[kkState.cur].collected.push(handCid);
     kkRenderAll();
-    await kkGlow([handCid, ...matchFieldIds]);
-    kkSetStatus(`${kkState.p[kkState.cur].name} → ${CARDS[handCid].month}月（${CARDS[handCid].flower}）取得`);
   } else {
+    // マッチなし：場に出す
     kkState.field.push(handCid);
     kkRenderAll();
+    // 置いたカードを一瞬ハイライト
+    const el = document.querySelector(`#kk-field-cards .kk-card[data-cardid="${handCid}"]`);
+    if (el) { el.classList.add('match-flash'); setTimeout(() => el.classList.remove('match-flash'), 600); }
     kkSetStatus(`${kkState.p[kkState.cur].name} → ${CARDS[handCid].month}月（${CARDS[handCid].flower}）を場に出す`);
   }
 
@@ -2386,13 +2804,21 @@ async function kkDraw() {
     await kkAfterDraw(false);
   } else if (matches.length === 1 || matches.length >= 3) {
     const take = matches.length >= 3 ? matches : [matches[0]];
-    take.forEach(fid => { kkState.field = kkState.field.filter(id=>id!==fid); kkState.p[kkState.cur].collected.push(fid); });
-    kkState.p[kkState.cur].collected.push(drawnId);
+    // 山札カードを一時的にフィールドへ追加して演出
+    kkState.field.push(drawnId);
     kkState.drawnCard = null;
     kkRenderAll();
-    await kkGlow([drawnId, ...take]);
+    [drawnId, ...take].forEach(cid => {
+      const el = document.querySelector(`#kk-field-cards .kk-card[data-cardid="${cid}"]`);
+      if (el) el.classList.add('kk-collecting');
+    });
     kkSetStatus(`山札から ${CARDS[drawnId].month}月（${CARDS[drawnId].flower}）取得！`);
-    await sleep(300);
+    await sleep(520);
+    kkState.field = kkState.field.filter(id => id !== drawnId);
+    take.forEach(fid => { kkState.field = kkState.field.filter(id=>id!==fid); kkState.p[kkState.cur].collected.push(fid); });
+    kkState.p[kkState.cur].collected.push(drawnId);
+    kkRenderAll();
+    await sleep(200);
     await kkAfterDraw(true);
   } else {
     // 2枚マッチ: プレイヤーまたはNPCが選ぶ
@@ -2410,12 +2836,21 @@ async function kkDrawToField(matchFieldIds) {
   kkState.phase = 'idle';
   kkState.matchCands = [];
   const drawnId = kkState.drawnCard;
-  matchFieldIds.forEach(fid => { kkState.field = kkState.field.filter(id=>id!==fid); kkState.p[kkState.cur].collected.push(fid); });
-  kkState.p[kkState.cur].collected.push(drawnId);
+  // 山札カードを一時的にフィールドへ追加して演出
+  kkState.field.push(drawnId);
   kkState.drawnCard = null;
   kkRenderAll();
-  await kkGlow([drawnId, ...matchFieldIds]);
-  await sleep(300);
+  [drawnId, ...matchFieldIds].forEach(cid => {
+    const el = document.querySelector(`#kk-field-cards .kk-card[data-cardid="${cid}"]`);
+    if (el) el.classList.add('kk-collecting');
+  });
+  kkSetStatus(`${CARDS[drawnId].month}月（${CARDS[drawnId].flower}）取得！`);
+  await sleep(520);
+  kkState.field = kkState.field.filter(id => id !== drawnId);
+  matchFieldIds.forEach(fid => { kkState.field = kkState.field.filter(id=>id!==fid); kkState.p[kkState.cur].collected.push(fid); });
+  kkState.p[kkState.cur].collected.push(drawnId);
+  kkRenderAll();
+  await sleep(200);
   await kkAfterDraw(true);
 }
 
@@ -2425,6 +2860,14 @@ async function kkAfterDraw(didCollect) {
     if (newY.length > 0) {
       const { total } = calculateYaku(kkState.p[kkState.cur].collected);
       kkState.animating = false;
+      // ラストラウンドは自動あがり（こいこい不可）
+      if (kkState.round >= kkState.totalRounds) {
+        const { yaku } = calculateYaku(kkState.p[kkState.cur].collected);
+        kkSetStatus(`ラスト！ ${newY.join('・')} 完成 → 自動あがり！`);
+        await sleep(1200);
+        await kkDoShobu();
+        return;
+      }
       await kkShowChoiceDialog(total);
       return;
     }
@@ -2533,12 +2976,14 @@ function kkShowTurnOverlay() {
 ================================================================ */
 async function kkEndRoundDraw() {
   kkState.phase = 'idle'; kkState.animating = false;
+  kkState.lastRoundWinner = null; // 引き分け → 親不変
   kkState.history.push('draw');
   await kkShowRoundResult(null, 0, [], false);
 }
 
 async function kkEndRoundWin(winnerIdx) {
   kkState.phase = 'idle';
+  kkState.lastRoundWinner = winnerIdx; // 次ラウンドの親を記録
   const { yaku, total } = calculateYaku(kkState.p[winnerIdx].collected);
   let pts = total;
   const koikoiBonus = kkState.p[0].koikoi || kkState.p[1].koikoi;
@@ -2566,6 +3011,12 @@ function kkShowRoundResult(winnerIdx, pts, yaku, koikoiBonus) {
     const isLast = kkState.round >= kkState.totalRounds;
     const btn = document.getElementById('kk-next-round-btn');
     btn.textContent = isLast ? 'ゲーム終了' : '次のラウンドへ';
+    // 次ラウンドの親を予告表示
+    if (!isLast) {
+      const nextOya = winnerIdx !== null ? winnerIdx : kkState.oya;
+      const oyaNote = document.getElementById('kk-rr-detail');
+      oyaNote.innerHTML += `<br><span style="color:var(--gold-light);font-size:0.88em">次ラウンドの親: ${kkState.p[nextOya].name}</span>`;
+    }
     document.getElementById('kk-round-result').classList.add('active');
     const onClick = () => {
       btn.removeEventListener('click', onClick);
@@ -2598,6 +3049,52 @@ function kkShowFinalResult() {
 async function kkGlow(cardIds) {
   await sleep(80);
   // 取得済みなので DOM に要素は残っていないが、短い待機で演出感を出す
+}
+
+/* ================================================================
+   [KK] ドラッグ＆ドロップ
+================================================================ */
+let kkDragCard = null;
+
+/* フィールドコンテナへのドロップを1回だけ登録（マッチなし → 場に捨てる） */
+function kkInitFieldDrop() {
+  const el = document.getElementById('kk-field-cards');
+  el.addEventListener('dragover', (e) => {
+    if (kkDragCard !== null) e.preventDefault();
+  });
+  el.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (kkDragCard === null) return;
+    const dragged = kkDragCard;
+    // クリックした場所が子カード(個別drop)でなければここに来る
+    const matches = kkState.field.filter(f => CARDS[f].month === CARDS[dragged].month);
+    if (matches.length === 0) {
+      kkDragCard = null; kkDragClear();
+      kkState.selHand = dragged;
+      kkPlayToField(dragged, []);
+    } else {
+      kkSetStatus('マッチする緑のカードの上にドロップしてください');
+      kkDragCard = null; kkDragClear();
+    }
+  });
+}
+
+// スクリプト読み込み時に1回だけ実行（</body>直前のスクリプトなのでDOM確実に存在）
+kkInitFieldDrop();
+
+function kkDragHighlight(handCid) {
+  const month = CARDS[handCid].month;
+  const hasMatch = kkState.field.some(f => CARDS[f].month === month);
+  document.querySelectorAll('#kk-field-cards .kk-card').forEach(el => {
+    if (CARDS[parseInt(el.dataset.cardid)].month === month) el.classList.add('drag-match');
+  });
+  if (!hasMatch) document.getElementById('kk-field-cards').classList.add('drag-no-match');
+}
+
+function kkDragClear() {
+  document.querySelectorAll('#kk-field-cards .kk-card')
+    .forEach(el => el.classList.remove('drag-match', 'drop-target'));
+  document.getElementById('kk-field-cards').classList.remove('drag-no-match');
 }
 
 /* ================================================================
