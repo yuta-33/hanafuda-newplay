@@ -35,8 +35,101 @@
     }
 
     /* ===========================
-       2. セットアップ画面
+       2. ホーム画面
     =========================== */
+    #home {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 28px;
+      padding: 24px 16px;
+    }
+    #home.active { display: flex; }
+    #home .home-title {
+      font-size: 3em;
+      color: var(--gold);
+      text-shadow: 0 0 32px rgba(212,168,67,0.6);
+      letter-spacing: 0.18em;
+      text-align: center;
+    }
+    #home .home-subtitle {
+      font-size: 0.9em;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-top: -16px;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+      max-width: 440px;
+    }
+    .mode-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mode-card:hover {
+      border-color: var(--gold);
+      background: rgba(212,168,67,0.1);
+      box-shadow: 0 0 16px rgba(212,168,67,0.25);
+      transform: translateY(-3px);
+    }
+    .mode-card:active { transform: translateY(0); }
+    .mode-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .mode-card .mc-icon {
+      font-size: 2.4em;
+      line-height: 1;
+    }
+    .mode-card .mc-title {
+      font-size: 1.05em;
+      color: var(--gold);
+      font-weight: bold;
+      letter-spacing: 0.06em;
+    }
+    .mode-card .mc-desc {
+      font-size: 0.78em;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .mode-card .mc-badge {
+      font-size: 0.68em;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 2px 8px;
+      display: inline-block;
+      margin: 0 auto;
+    }
+    .mode-card .mc-badge.soon {
+      color: #7a6040;
+      border-color: #4a3820;
+    }
+    .home-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .home-version {
+      font-size: 0.72em;
+      color: #604830;
+    }
+
     #setup {
       display: none;
       flex-direction: column;
@@ -693,9 +786,40 @@
 <body>
 
 <!-- ========================================================
+     ホーム画面
+======================================================== -->
+<div id="home" class="active">
+  <div class="home-title">花　札</div>
+  <p class="home-subtitle">Hanafuda Card Game</p>
+
+  <div class="mode-grid">
+    <!-- こいこい（準備中） -->
+    <div class="mode-card disabled" id="mode-koikoi">
+      <div class="mc-icon">🎴</div>
+      <div class="mc-title">こいこい</div>
+      <div class="mc-desc">伝統的な花札の対戦ルール。手札と場を合わせて役を作れ。</div>
+      <span class="mc-badge soon">準備中</span>
+    </div>
+    <!-- 神経衰弱 -->
+    <div class="mode-card" id="mode-memory">
+      <div class="mc-icon">🧠</div>
+      <div class="mc-title">神経衰弱</div>
+      <div class="mc-desc">裏向きの48枚から同じ月を揃えて役を作る新感覚ルール。</div>
+      <span class="mc-badge">2〜4人対応</span>
+    </div>
+  </div>
+
+  <div class="home-bottom">
+    <button class="btn-sm" id="home-yaku-btn">役一覧を見る</button>
+    <p class="home-version">v1.1.0 — 花札神経衰弱</p>
+  </div>
+</div>
+
+<!-- ========================================================
      セットアップ画面
 ======================================================== -->
-<div id="setup" class="active">
+<div id="setup">
+  <button class="btn-sm" id="back-to-home" style="align-self:flex-start;margin-bottom:-8px;">← ホームへ</button>
   <h1>花札神経衰弱</h1>
   <p class="subtitle">同じ月の札を集めて役を作れ！</p>
 
@@ -741,7 +865,7 @@
     取得枚数ではなく、集めた札で作れる<strong style="color:var(--gold)">役のポイント</strong>で勝敗を決めます。
   </div>
 
-  <p class="setup-version">v1.0.0 — 花札神経衰弱</p>
+  <p class="setup-version">v1.1.0 — 花札神経衰弱</p>
 </div>
 
 <!-- ========================================================
@@ -794,7 +918,10 @@
   <h2>ゲーム終了！</h2>
   <p class="result-sub">役のポイントで順位を決定</p>
   <div class="result-list" id="result-list"></div>
-  <button class="btn" id="replay-btn">もう一度遊ぶ</button>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn" id="replay-btn">もう一度遊ぶ</button>
+    <button class="btn" id="home-from-result" style="background:#2a1800;">ホームへ</button>
+  </div>
 </div>
 
 
@@ -966,6 +1093,7 @@ const shuffle = (arr) => {
 /* ================================================================
    [DOM] 各要素の参照
 ================================================================ */
+const homeEl    = document.getElementById('home');
 const setupEl   = document.getElementById('setup');
 const gameEl    = document.getElementById('game');
 const resultEl  = document.getElementById('result');
@@ -975,6 +1103,35 @@ const statusEl  = document.getElementById('status');
 const countSel  = document.getElementById('player-count');
 const nameDiv   = document.getElementById('name-inputs');
 const remainEl  = document.getElementById('remain-count');
+
+/* ================================================================
+   [HOME] ホーム画面ナビゲーション
+================================================================ */
+function showHome() {
+  resultEl.classList.remove('active');
+  setupEl.classList.remove('active');
+  gameEl.classList.remove('active');
+  homeEl.classList.add('active');
+}
+
+// 神経衰弱モードへ
+document.getElementById('mode-memory').addEventListener('click', () => {
+  homeEl.classList.remove('active');
+  setupEl.classList.add('active');
+  updateNameInputs();
+});
+
+// セットアップ → ホームへ戻る
+document.getElementById('back-to-home').addEventListener('click', showHome);
+
+// 結果画面 → ホームへ
+document.getElementById('home-from-result').addEventListener('click', showHome);
+
+// ホーム画面の役一覧ボタン
+document.getElementById('home-yaku-btn').addEventListener('click', () => {
+  buildYakuModal();
+  document.getElementById('yaku-modal').classList.add('active');
+});
 
 /* ================================================================
    [SETUP] プレイヤー名入力
@@ -1368,6 +1525,7 @@ document.getElementById('replay-btn').addEventListener('click', () => {
   setupEl.classList.add('active');
   updateNameInputs();
 });
+
 </script>
 </body>
 </html>
