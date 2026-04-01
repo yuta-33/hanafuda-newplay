@@ -1336,7 +1336,6 @@
     <div class="form-row">
       <label>対戦形式</label>
       <select id="mem-play-mode">
-        <option value="local">ローカル対戦</option>
         <option value="npc">NPC対戦</option>
         <option value="online">オンライン対戦</option>
       </select>
@@ -1492,13 +1491,8 @@
       <label>対戦相手</label>
       <select id="kk-opponent-type">
         <option value="npc">NPC対戦</option>
-        <option value="local">ローカル2人</option>
         <option value="online">オンライン対戦</option>
       </select>
-    </div>
-    <div class="form-row" id="kk-p2-name-row" style="display:none">
-      <label>プレイヤー2</label>
-      <input type="text" id="kk-p2-name" value="プレイヤー2">
     </div>
     <div id="kk-npc-diff-row">
       <div class="mode-sub-label">NPC難易度</div>
@@ -2643,11 +2637,10 @@ document.querySelectorAll('#kk-diff-grid .difficulty-btn').forEach(btn => {
   });
 });
 
-// 対戦相手切替
+// 対戦相手切替（ローカル2人は廃止済み）
 document.getElementById('kk-opponent-type').addEventListener('change', function() {
   const v = this.value;
-  document.getElementById('kk-p2-name-row').style.display  = v === 'local'  ? '' : 'none';
-  document.getElementById('kk-npc-diff-row').style.display = v === 'npc'    ? 'block' : 'none';
+  document.getElementById('kk-npc-diff-row').style.display = v === 'npc' ? 'block' : 'none';
   // オンラインの場合、期間はロビーで設定するためここでは隠す
   document.getElementById('kk-period').closest('.form-row').style.display = v === 'online' ? 'none' : '';
 });
@@ -3916,22 +3909,33 @@ function onlineSerializeKK() {
 }
 
 function onlineApplyKK(data) {
-  kkState.p            = data.p;
-  kkState.field        = data.field;
-  kkState.deck         = data.deck;
-  kkState.round        = data.round;
-  kkState.totalRounds  = data.totalRounds;
-  kkState.cur          = data.cur;
-  kkState.oya          = data.oya;
-  kkState.lastRoundWinner = data.lastRoundWinner;
-  kkState.phase        = data.phase;
-  kkState.selHand      = data.selHand;
-  kkState.drawnCard    = data.drawnCard;
-  kkState.matchCands   = data.matchCands;
-  kkState.prevYaku     = data.prevYaku;
-  kkState.koikoiBy     = data.koikoiBy;
-  kkState.history      = data.history;
-  kkState.animating    = false;
+  // Firebaseは空配列[]をnullとして保存するため、受信時に必ず配列へ戻す
+  function toArr(v) {
+    if (v == null) return [];
+    if (Array.isArray(v)) return v;
+    return Object.values(v); // Firebaseがオブジェクト形式で返した場合
+  }
+  const py = data.prevYaku;
+  kkState.p = toArr(data.p).map(p => ({
+    ...p,
+    hand:      toArr(p.hand),
+    collected: toArr(p.collected),
+  }));
+  kkState.field       = toArr(data.field);
+  kkState.deck        = toArr(data.deck);
+  kkState.matchCands  = toArr(data.matchCands);
+  kkState.history     = toArr(data.history);
+  kkState.prevYaku    = [ toArr(py && py[0]), toArr(py && py[1]) ];
+  kkState.round       = data.round;
+  kkState.totalRounds = data.totalRounds;
+  kkState.cur         = data.cur;
+  kkState.oya         = data.oya;
+  kkState.lastRoundWinner = data.lastRoundWinner ?? null;
+  kkState.phase       = data.phase;
+  kkState.selHand     = data.selHand ?? null;
+  kkState.drawnCard   = data.drawnCard ?? null;
+  kkState.koikoiBy    = data.koikoiBy ?? null;
+  kkState.animating   = false;
 }
 
 function onlinePushKKState() {
@@ -3988,11 +3992,19 @@ function onlineSerializeMem() {
 }
 
 function onlineApplyMem(data) {
-  state.board         = data.board;
-  state.currentPlayer = data.currentPlayer;
-  state.flipped       = data.flipped;
-  state.players       = data.players;
-  state.animating     = false;
+  function toArr(v) {
+    if (v == null) return [];
+    if (Array.isArray(v)) return v;
+    return Object.values(v);
+  }
+  state.board = toArr(data.board).map(slot => ({...slot}));
+  state.currentPlayer = data.currentPlayer ?? 0;
+  state.flipped = toArr(data.flipped);
+  state.players = toArr(data.players).map(p => ({
+    ...p,
+    collected: toArr(p.collected),
+  }));
+  state.animating = false;
 }
 
 function onlinePushMemState() {
