@@ -2720,9 +2720,10 @@ async function kkStartRound() {
   kkState.deck      = deck48; // 残り24
 
   if (online.active) {
-    // オンライン: オーバーレイ不要。即レンダリングしてから状態を送信できるようにする
+    // オンライン: オーバーレイ不要。レンダリング後に相手へ状態を送信
     kkRenderAll();
-    kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！`);
+    kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！${kkState.p[kkState.cur].name} の番`);
+    onlinePushKKState();
   } else if (!kkState.npc) {
     // ローカル2人: オーバーレイで手札を隠す
     kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderYaku();
@@ -3232,19 +3233,21 @@ function kkShowTurnOverlay() {
 ================================================================ */
 async function kkEndRoundDraw() {
   kkState.phase = 'idle'; kkState.animating = false;
-  kkState.lastRoundWinner = null; // 引き分け → 親不変
+  kkState.lastRoundWinner = null;
   kkState.history.push('draw');
+  if (online.active) onlinePushKKState(); // 相手に引き分けを通知
   await kkShowRoundResult(null, 0, 0, [], false);
 }
 
 async function kkEndRoundWin(winnerIdx) {
   kkState.phase = 'idle';
-  kkState.lastRoundWinner = winnerIdx; // 次ラウンドの親を記録
+  kkState.lastRoundWinner = winnerIdx;
   const { yaku, total } = calculateYaku(kkState.p[winnerIdx].collected);
   const koikoiCounter = kkState.koikoiBy !== null && winnerIdx !== kkState.koikoiBy;
   const pts = koikoiCounter ? total * 2 : total;
   kkState.p[winnerIdx].totalScore += pts;
   kkState.history.push(winnerIdx === 0 ? 'win0' : 'win1');
+  if (online.active) onlinePushKKState(); // 相手に勝利・得点を通知
   await kkShowRoundResult(winnerIdx, pts, total, yaku, koikoiCounter);
 }
 
@@ -3852,11 +3855,9 @@ function onlineStartGame(roomData) {
     onlineListenRoomState();
 
     if (online.myIdx === 0) {
-      // ホスト：ゲーム状態を生成してFirebaseに書き込む
+      // ホスト：ゲーム状態を生成してFirebaseに書き込む（kkStartRound内でpush）
       onlineListenKKState();
-      kkStartRound().then(() => {
-        onlinePushKKState();
-      });
+      kkStartRound();
     } else {
       // ゲスト：Firebaseからゲーム状態を受信して開始
       online.roomRef.update({ status: 'playing' });
@@ -3943,13 +3944,15 @@ function onlineListenKKState() {
     const data = snap.val();
     if (!data) return;
     if (data.updatedBy === online.clientId) return;
-    // 相手のターンの状態を受信して描画
     onlineApplyKK(data);
     kkRenderAll();
-    kkSetStatus(`${kkState.p[kkState.cur].name} のターン`);
-    // 受信したフェーズに応じて処理継続
-    if (data.phase === 'field-match-h' || data.phase === 'field-match-d') {
-      // 相手が選択中（こちらは待機）
+    if (data.phase === 'idle') {
+      // ラウンド終了 — 相手がラウンド結果を確認中
+      kkSetStatus('ラウンド終了 — 相手の確認を待っています...');
+    } else if (kkState.cur === online.myIdx) {
+      kkSetStatus('あなたのターンです');
+    } else {
+      kkSetStatus(`${kkState.p[kkState.cur].name} のターン`);
     }
   });
 }
