@@ -97,5 +97,15 @@ Width: 820px / Height: 960px（スクロール許可にする）
 - 役一覧モーダル
 - 結果画面
 
+## クレジット / ライセンス
+
+Card images are based on "SVG Hanafuda cards" by Louie Mantia / すけじょ via Wikimedia Commons,
+adapted to PNG for this game, and used under CC BY-SA 4.0.
+
+- Source: https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards
+- License: https://creativecommons.org/licenses/by-sa/4.0/
+
+This project is an original browser game based on traditional hanafuda rules and is not affiliated with Nintendo.
+
 ## AI素材の使用
 なし → 申告不要

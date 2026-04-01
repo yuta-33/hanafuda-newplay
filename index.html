@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="花札と神経衰弱を組み合わせた新感覚カードゲーム。同じ月の札を集めて役を作れ！2〜4人対応。">
   <title>花札神経衰弱</title>
+  <!-- Firebase SDK (compat v9) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <style>
     /* ===========================
        1. CSS変数・リセット
@@ -658,6 +662,127 @@
     .mem-pn-empty { font-size: 0.6em; color: var(--text-muted); font-style: italic; padding: 4px 0; }
 
     /* ===========================
+       6c. オンラインロビー
+    =========================== */
+    #online-lobby {
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 18px; padding: 24px 16px;
+    }
+    #online-lobby.active { display: flex; }
+    .lobby-box {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; padding: 26px 28px; width: 100%; max-width: 400px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .lobby-title {
+      font-size: 1.2em; color: var(--gold); text-align: center;
+      letter-spacing: 0.1em; margin-bottom: 4px;
+    }
+    .lobby-mode-badge {
+      text-align: center; font-size: 0.78em; color: var(--text-muted);
+      background: rgba(160,108,42,0.15); border-radius: 20px;
+      padding: 3px 12px; margin: -6px auto 2px;
+    }
+    .lobby-tabs {
+      display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .lobby-tab {
+      flex: 1; padding: 9px 4px; text-align: center; cursor: pointer;
+      font-size: 0.88em; color: var(--text-muted);
+      background: transparent; border: none; font-family: inherit;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lobby-tab.active { background: rgba(212,168,67,0.18); color: var(--gold); }
+    .lobby-section { display: flex; flex-direction: column; gap: 10px; }
+    .lobby-section.hidden { display: none; }
+    .lobby-room-id {
+      font-size: 2.2em; letter-spacing: 0.28em; color: var(--gold-light);
+      font-weight: bold; text-align: center; background: rgba(0,0,0,0.3);
+      border-radius: 8px; padding: 10px; border: 1px dashed var(--border);
+    }
+    .lobby-hint { font-size: 0.74em; color: var(--text-muted); text-align: center; }
+    .lobby-status {
+      text-align: center; font-size: 0.88em; color: var(--gold-light);
+      min-height: 22px;
+    }
+    .lobby-input {
+      font-size: 1.5em; letter-spacing: 0.22em; text-align: center;
+      padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: #1a0e00; color: var(--text); width: 100%; font-family: monospace;
+      text-transform: uppercase;
+    }
+    .lobby-waiting {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 0.84em; color: var(--text-muted);
+    }
+    .lobby-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+      animation: dotPulse 1.2s ease infinite;
+    }
+    .lobby-dot:nth-child(2) { animation-delay: 0.3s; }
+    .lobby-dot:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes dotPulse {
+      0%,100% { opacity: 0.2; transform: scale(0.8); }
+      50%      { opacity: 1;   transform: scale(1.15); }
+    }
+    .lobby-player-list { display: flex; flex-direction: column; gap: 5px; }
+    .lobby-player-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.84em; padding: 5px 8px;
+      background: rgba(0,0,0,0.2); border-radius: 6px;
+    }
+    .lobby-player-item .lpi-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .lpi-dot.joined { background: #60e060; }
+    .lpi-dot.waiting { background: #606060; animation: dotPulse 1.4s ease infinite; }
+    .lpi-name { flex: 1; color: var(--text); }
+    .lpi-you { font-size: 0.72em; color: var(--gold); }
+    .lobby-form-row {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .lobby-form-row label {
+      font-size: 0.74em; color: var(--text-muted); text-align: center;
+    }
+    .lobby-subtabs {
+      display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .lobby-subtab {
+      flex: 1; padding: 8px 4px; text-align: center; cursor: pointer;
+      font-size: 0.8em; color: var(--text-muted);
+      background: rgba(0,0,0,0.15); border: none; font-family: inherit;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lobby-subtab.active { background: rgba(212,168,67,0.18); color: var(--gold); }
+    .lobby-join-pane.hidden { display: none; }
+    .lobby-public-list {
+      display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto;
+      padding-right: 4px;
+    }
+    .lobby-public-card {
+      display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+      border: 1px solid rgba(160,108,42,0.65); border-radius: 10px;
+      background: rgba(0,0,0,0.18);
+    }
+    .lobby-public-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      color: var(--text);
+    }
+    .lobby-public-name {
+      font-size: 0.88em; color: var(--gold-light); font-weight: bold;
+    }
+    .lobby-public-meta {
+      font-size: 0.74em; color: var(--text-muted); display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .lobby-public-empty {
+      text-align: center; font-size: 0.82em; color: var(--text-muted);
+      padding: 14px 8px; border: 1px dashed rgba(160,108,42,0.45); border-radius: 8px;
+    }
+    .lobby-public-card .btn {
+      padding: 8px 12px; font-size: 0.82em;
+    }
+
+    /* ===========================
        7. 役一覧モーダル
     =========================== */
     #yaku-modal {
@@ -1172,7 +1297,7 @@
     <button class="btn-sm" id="home-yaku-btn">役一覧を見る</button>
     <p class="home-version">v1.1.0 — 花札神経衰弱</p>
     <p style="margin-top:10px;font-size:0.6em;color:#7a5a30;line-height:1.6;">
-      Card images: <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards" target="_blank" rel="noopener" style="color:#a07840;">Louie Mantia / すけじょ</a>
+      Card images: based on <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards" target="_blank" rel="noopener" style="color:#a07840;">SVG Hanafuda cards by Louie Mantia / すけじょ</a>, adapted to PNG
       — <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener" style="color:#a07840;">CC BY-SA 4.0</a>
     </p>
   </div>
@@ -1212,6 +1337,7 @@
       <select id="mem-play-mode">
         <option value="local">ローカル対戦</option>
         <option value="npc">NPC対戦</option>
+        <option value="online">オンライン対戦</option>
       </select>
     </div>
     <div id="mem-npc-rows" style="display:none">
@@ -1274,6 +1400,82 @@
 </div>
 
 <!-- ========================================================
+     オンラインロビー画面
+======================================================== -->
+<div id="online-lobby">
+  <div class="lobby-box">
+    <div class="lobby-title">🌐 オンライン対戦</div>
+    <div class="lobby-mode-badge" id="lobby-mode-label">こいこい</div>
+
+    <!-- タブ：作成 / 参加 -->
+    <div class="lobby-tabs">
+      <button class="lobby-tab active" id="lobby-tab-create" onclick="lobbyShowTab('create')">ルーム作成</button>
+      <button class="lobby-tab"       id="lobby-tab-join"   onclick="lobbyShowTab('join')">ルームに参加</button>
+    </div>
+
+    <!-- 作成セクション -->
+    <div class="lobby-section" id="lobby-sec-create">
+      <div class="lobby-hint">あなたの名前</div>
+      <input type="text" id="lobby-name-create" class="form-control" placeholder="プレイヤー名" maxlength="12"
+             style="padding:7px 11px;background:#1a0e00;color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:inherit;">
+      <div class="lobby-form-row" id="lobby-period-row" style="display:none">
+        <label>対戦期間</label>
+        <select id="lobby-period" style="background:#1a0e00;color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-family:inherit;font-size:0.95em;">
+          <option value="3">3ヶ月</option>
+          <option value="6">6ヶ月</option>
+          <option value="9">9ヶ月</option>
+          <option value="12" selected>12ヶ月</option>
+        </select>
+      </div>
+      <div class="lobby-form-row">
+        <label>ルーム公開設定</label>
+        <div class="lobby-subtabs">
+          <button class="lobby-subtab active" id="lobby-create-vis-public" onclick="lobbySetCreateVisibility('public')">公開</button>
+          <button class="lobby-subtab" id="lobby-create-vis-private" onclick="lobbySetCreateVisibility('private')">非公開</button>
+        </div>
+      </div>
+      <button class="btn" id="lobby-btn-create" onclick="lobbyCreateRoom()">ルームを作る</button>
+      <div id="lobby-create-result" style="display:none">
+        <div class="lobby-hint">ルームID（相手に共有してください）</div>
+        <div class="lobby-room-id" id="lobby-room-id-display">------</div>
+        <div class="lobby-status" id="lobby-create-status"></div>
+        <div class="lobby-player-list" id="lobby-player-list"></div>
+        <div class="lobby-waiting">
+          <div class="lobby-dot"></div><div class="lobby-dot"></div><div class="lobby-dot"></div>
+          <span>相手の参加を待っています...</span>
+        </div>
+        <button class="btn" id="lobby-btn-cancel-create" onclick="lobbyCancelRoom()" style="background:#3a1010;border-color:#8b2020;font-size:0.85em">キャンセル</button>
+      </div>
+    </div>
+
+    <!-- 参加セクション -->
+    <div class="lobby-section hidden" id="lobby-sec-join">
+      <div class="lobby-hint">あなたの名前</div>
+      <input type="text" id="lobby-name-join" class="form-control" placeholder="プレイヤー名" maxlength="12"
+             style="padding:7px 11px;background:#1a0e00;color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:inherit;">
+      <div class="lobby-form-row">
+        <label>参加方法</label>
+        <div class="lobby-subtabs">
+          <button class="lobby-subtab active" id="lobby-join-mode-public" onclick="lobbyShowJoinMode('public')">公開ルーム一覧</button>
+          <button class="lobby-subtab" id="lobby-join-mode-private" onclick="lobbyShowJoinMode('private')">非公開コード入力</button>
+        </div>
+      </div>
+      <div class="lobby-join-pane" id="lobby-join-public-pane">
+        <div class="lobby-hint">募集中の公開ルーム</div>
+        <div class="lobby-public-list" id="lobby-public-room-list"></div>
+      </div>
+      <div class="lobby-join-pane hidden" id="lobby-join-private-pane">
+        <div class="lobby-hint">ルームID（6文字）</div>
+        <input type="text" id="lobby-room-input" class="lobby-input" placeholder="ABC123" maxlength="6">
+        <button class="btn" id="lobby-btn-join" onclick="lobbyJoinRoom()">参加する</button>
+      </div>
+      <div class="lobby-status" id="lobby-join-status"></div>
+    </div>
+  </div>
+  <button class="btn-sm" onclick="lobbyClose()">← 戻る</button>
+</div>
+
+<!-- ========================================================
      こいこいセットアップ画面
 ======================================================== -->
 <div id="koikoi-setup">
@@ -1290,6 +1492,7 @@
       <select id="kk-opponent-type">
         <option value="npc">NPC対戦</option>
         <option value="local">ローカル2人</option>
+        <option value="online">オンライン対戦</option>
       </select>
     </div>
     <div class="form-row" id="kk-p2-name-row" style="display:none">
@@ -1320,7 +1523,7 @@
     手札8枚・場の札8枚・山札24枚でスタート。<br>
     手札から1枚出して<strong style="color:var(--gold)">同じ月の場の札</strong>と合わせる→山札をめくって同じく合わせる。<br>
     役が完成したら<strong style="color:var(--gold)">「こいこい」で継続、「勝負」で得点確定</strong>。<br>
-    こいこい宣言後に勝てば点数2倍！
+    こいこい後に相手へ先に上がられると、相手の点数が2倍になります。
   </div>
 </div>
 
@@ -1455,7 +1658,7 @@
     <button class="btn" id="home-from-result" style="background:#2a1800;">ホームへ</button>
   </div>
   <p style="margin-top:24px;font-size:0.62em;color:#7a5a30;line-height:1.6;text-align:center;">
-    Card images: <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards" target="_blank" rel="noopener" style="color:#a07840;">Hanafuda cards by Louie Mantia / すけじょ</a>
+    Card images: based on <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards" target="_blank" rel="noopener" style="color:#a07840;">SVG Hanafuda cards by Louie Mantia / すけじょ</a>, adapted to PNG
     — <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener" style="color:#a07840;">CC BY-SA 4.0</a>
   </p>
 </div>
@@ -1646,13 +1849,18 @@ const remainEl  = document.getElementById('remain-count');
 /* ================================================================
    [HOME] ホーム画面ナビゲーション
 ================================================================ */
+const ALL_SCREENS = () => [
+  resultEl, setupEl, gameEl,
+  document.getElementById('koikoi-setup'),
+  document.getElementById('koikoi-game'),
+  document.getElementById('koikoi-result'),
+  document.getElementById('online-lobby'),
+];
+
 function showHome() {
-  [resultEl, setupEl, gameEl,
-   document.getElementById('koikoi-setup'),
-   document.getElementById('koikoi-game'),
-   document.getElementById('koikoi-result')
-  ].forEach(el => el && el.classList.remove('active'));
+  ALL_SCREENS().forEach(el => el && el.classList.remove('active'));
   homeEl.classList.add('active');
+  onlineCleanup(); // ロビー離脱時にFirebaseリスナー解除
 }
 
 // 神経衰弱モードへ
@@ -1701,11 +1909,13 @@ function updateNameInputs() {
 }
 countSel.addEventListener('change', updateNameInputs);
 
-// NPC モード切替
+// NPC / オンライン モード切替
 document.getElementById('mem-play-mode').addEventListener('change', function() {
-  const isNpc = this.value === 'npc';
-  document.getElementById('mem-npc-rows').style.display      = isNpc ? 'block' : 'none';
-  document.getElementById('mem-player-count-row').style.display = isNpc ? 'none' : '';
+  const v = this.value;
+  const isNpc = v === 'npc';
+  const isOnline = v === 'online';
+  document.getElementById('mem-npc-rows').style.display         = isNpc    ? 'block' : 'none';
+  document.getElementById('mem-player-count-row').style.display = (isNpc || isOnline) ? 'none' : '';
   updateNameInputs();
 });
 
@@ -1722,7 +1932,15 @@ updateNameInputs();
 /* ================================================================
    [SETUP] ゲーム開始
 ================================================================ */
-document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('start-btn').addEventListener('click', () => {
+  const mode = document.getElementById('mem-play-mode').value;
+  if (mode === 'online') {
+    const name = (document.getElementById('pname0')?.value.trim()) || 'プレイヤー1';
+    lobbyOpen('memory', name);
+  } else {
+    startGame();
+  }
+});
 
 async function startGame() {
   const isNpc = document.getElementById('mem-play-mode').value === 'npc';
@@ -1873,9 +2091,9 @@ const MEM_PANEL_POS = {
 };
 const MEM_TYPE_GROUPS = [
   { label: '光',  types: ['hikari'],                     color: '#ffe060' },
-  { label: '絵札', types: ['tane'],                      color: '#70e090' },
+  { label: 'タネ', types: ['tane'],                      color: '#70e090' },
   { label: '短冊', types: ['tanzaku_red','tanzaku_blue'], color: '#ff9898' },
-  { label: 'タネ', types: ['kasu'],                      color: '#a09070' },
+  { label: 'カス', types: ['kasu'],                      color: '#a09070' },
 ];
 
 function buildPlayerPanelContent(player, playerIdx, isHorizontal) {
@@ -1967,6 +2185,8 @@ function renderCollectedPanel() {
 ================================================================ */
 async function onCardClick(idx) {
   if (state.animating) return;
+  // オンライン: 相手のターン中は操作不可
+  if (online.active && online.mode === 'memory' && state.currentPlayer !== online.myIdx) return;
   const slot = state.board[idx];
   if (slot.faceUp || slot.collected) return;
   if (state.flipped.length >= 2) return;
@@ -2017,6 +2237,7 @@ async function onCardClick(idx) {
     await showBonusToast();
     setStatus(`${state.players[state.currentPlayer].name} もう1ターンです！`);
     state.animating = false;
+    if (online.active && online.mode === 'memory') onlinePushMemState();
     checkNpcTurn();
 
   } else {
@@ -2034,6 +2255,7 @@ async function onCardClick(idx) {
     state.flipped = [];
     await advanceTurn();
     state.animating = false;
+    if (online.active && online.mode === 'memory') onlinePushMemState();
     checkNpcTurn();
   }
 }
@@ -2422,12 +2644,22 @@ document.querySelectorAll('#kk-diff-grid .difficulty-btn').forEach(btn => {
 
 // 対戦相手切替
 document.getElementById('kk-opponent-type').addEventListener('change', function() {
-  const isNpc = this.value === 'npc';
-  document.getElementById('kk-p2-name-row').style.display  = isNpc ? 'none' : '';
-  document.getElementById('kk-npc-diff-row').style.display = isNpc ? 'block' : 'none';
+  const v = this.value;
+  document.getElementById('kk-p2-name-row').style.display  = v === 'local'  ? '' : 'none';
+  document.getElementById('kk-npc-diff-row').style.display = v === 'npc'    ? 'block' : 'none';
+  // オンラインの場合、期間はロビーで設定するためここでは隠す
+  document.getElementById('kk-period').closest('.form-row').style.display = v === 'online' ? 'none' : '';
 });
 
-document.getElementById('kk-start-btn').addEventListener('click', kkStartGame);
+document.getElementById('kk-start-btn').addEventListener('click', () => {
+  const oppType = document.getElementById('kk-opponent-type').value;
+  if (oppType === 'online') {
+    const name = document.getElementById('kk-p1-name').value.trim() || 'プレイヤー1';
+    lobbyOpen('koikoi', name);
+  } else {
+    kkStartGame();
+  }
+});
 
 /* ================================================================
    [KK] ゲーム開始
@@ -2486,8 +2718,12 @@ async function kkStartRound() {
   kkState.field     = deck48.splice(0, 8);
   kkState.deck      = deck48; // 残り24
 
-  // ローカル2人のラウンド開始時は手札を隠してオーバーレイ表示
-  if (!kkState.npc) {
+  if (online.active) {
+    // オンライン: オーバーレイ不要。即レンダリングしてから状態を送信できるようにする
+    kkRenderAll();
+    kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！`);
+  } else if (!kkState.npc) {
+    // ローカル2人: オーバーレイで手札を隠す
     kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderYaku();
     document.getElementById('kk-player-hand').innerHTML = '';
     kkSetStatus(`ラウンド ${kkState.round}/${kkState.totalRounds} 開始！`);
@@ -2598,8 +2834,9 @@ function kkCardBackEl() {
 
 
 function kkRenderOpp() {
-  // NPC対戦では常にPlayer1(NPC)、ローカル2人では相手側
-  const opp = kkState.npc ? 1 : (1 - kkState.cur);
+  // NPC: 常にPlayer1(NPC) / オンライン: 常に相手固定 / ローカル2人: 手番でない側
+  const opp = kkState.npc ? 1
+    : (online.active ? (1 - online.myIdx) : (1 - kkState.cur));
   document.getElementById('kk-opp-label').textContent =
     `${kkState.p[opp].name}　手札 ${kkState.p[opp].hand.length}枚`;
   // 相手の手札は裏向きで枚数だけ表示
@@ -2656,12 +2893,12 @@ function kkRenderDeck() {
 
 function kkRenderPlayer() {
   const area = document.getElementById('kk-player-hand');
-  // NPC対戦では常にPlayer0(人間)、ローカル2人では現在のプレイヤー
-  const pi = kkState.npc ? 0 : kkState.cur;
+  // NPC: 常にPlayer0(人間) / オンライン: 常に自分固定 / ローカル2人: 現在の手番
+  const pi = kkState.npc ? 0 : (online.active ? online.myIdx : kkState.cur);
   document.getElementById('kk-player-label').textContent = `${kkState.p[pi].name} 手札`;
   area.innerHTML = '';
 
-  // 自分のターンかどうか（animatingは内部ガードに任せる）
+  // 自分のターンかどうか
   const isMyTurn = kkState.cur === pi;
 
   kkState.p[pi].hand.forEach(cid => {
@@ -2712,6 +2949,7 @@ function kkYakuText(pi) {
 function kkOnHandClick(cid) {
   if (kkState.animating || kkState.phase !== 'hand-select') return;
   if (kkState.npc && kkState.cur === kkState.npcIdx) return;
+  if (online.active && online.mode === 'koikoi' && kkState.cur !== online.myIdx) return;
   kkState.selHand = cid;
   kkRenderPlayer();
   const matches = kkState.field.filter(f => CARDS[f].month === CARDS[cid].month);
@@ -2733,6 +2971,7 @@ function kkOnHandClick(cid) {
 function kkOnFieldClick(cid) {
   if (kkState.animating) return;
   if (kkState.npc && kkState.cur === kkState.npcIdx) return;
+  if (online.active && online.mode === 'koikoi' && kkState.cur !== online.myIdx) return;
   if (kkState.phase === 'field-match-h' && kkState.matchCands.includes(cid)) {
     kkPlayToField(kkState.selHand, [cid]);
   } else if (kkState.phase === 'field-match-d' && kkState.matchCands.includes(cid)) {
@@ -2896,6 +3135,11 @@ function kkShowChoiceDialog(totalPts) {
     dialog.classList.add('active');
 
     const isNpcTurn = kkState.npc && kkState.cur === kkState.npcIdx;
+    // オンライン対戦: 相手のダイアログは表示しない（相手側が操作）
+    if (online.active && online.mode === 'koikoi' && kkState.cur !== online.myIdx) {
+      dialog.classList.remove('active');
+      resolve(); return;
+    }
     if (isNpcTurn) {
       setTimeout(async () => {
         dialog.classList.remove('active');
@@ -2941,6 +3185,17 @@ async function kkNextTurn() {
   kkState.selHand = null; kkState.drawnCard = null; kkState.matchCands = [];
   kkState.phase = 'hand-select';
 
+  // オンラインモード: 状態をFirebaseへ書き込んで相手に渡す
+  if (online.active && online.mode === 'koikoi') {
+    kkRenderAll();
+    kkSetStatus(`${kkState.p[kkState.cur].name} のターン`);
+    await sleep(200);
+    kkState.animating = false;
+    onlinePushKKState(); // 相手に送信
+    // 相手のターンなら待機（Firebaseリスナーが受け取る）
+    return;
+  }
+
   // ローカル2人 & 人間のターンはオーバーレイで手札を隠す
   if (!kkState.npc) {
     kkRenderHeader(); kkRenderOpp(); kkRenderField(); kkRenderDeck(); kkRenderYaku();
@@ -2978,28 +3233,27 @@ async function kkEndRoundDraw() {
   kkState.phase = 'idle'; kkState.animating = false;
   kkState.lastRoundWinner = null; // 引き分け → 親不変
   kkState.history.push('draw');
-  await kkShowRoundResult(null, 0, [], false);
+  await kkShowRoundResult(null, 0, 0, [], false);
 }
 
 async function kkEndRoundWin(winnerIdx) {
   kkState.phase = 'idle';
   kkState.lastRoundWinner = winnerIdx; // 次ラウンドの親を記録
   const { yaku, total } = calculateYaku(kkState.p[winnerIdx].collected);
-  let pts = total;
-  const koikoiBonus = kkState.p[0].koikoi || kkState.p[1].koikoi;
-  if (koikoiBonus) pts *= 2;
+  const koikoiCounter = kkState.koikoiBy !== null && winnerIdx !== kkState.koikoiBy;
+  const pts = koikoiCounter ? total * 2 : total;
   kkState.p[winnerIdx].totalScore += pts;
   kkState.history.push(winnerIdx === 0 ? 'win0' : 'win1');
-  await kkShowRoundResult(winnerIdx, pts, yaku, koikoiBonus);
+  await kkShowRoundResult(winnerIdx, pts, total, yaku, koikoiCounter);
 }
 
-function kkShowRoundResult(winnerIdx, pts, yaku, koikoiBonus) {
+function kkShowRoundResult(winnerIdx, pts, basePts, yaku, koikoiCounter) {
   return new Promise(resolve => {
     document.getElementById('kk-rr-title').textContent  = `ラウンド ${kkState.round} / ${kkState.totalRounds} 終了`;
     document.getElementById('kk-rr-winner').textContent = winnerIdx === null ? '引き分け（手札切れ）' : `${kkState.p[winnerIdx].name} の勝ち！`;
     document.getElementById('kk-rr-detail').innerHTML   = winnerIdx === null ? '双方得点なし' :
       yaku.map(y=>`◆ ${y.name}：${y.points}点`).join('<br>') +
-      `<br><strong style="color:var(--gold-light)">+${pts}点${koikoiBonus?' (こいこいボーナス×2)':''}</strong>`;
+      `<br><strong style="color:var(--gold-light)">${koikoiCounter ? `${basePts}点 × 2 = ${pts}点（こいこい返し）` : `+${pts}点`}</strong>`;
     document.getElementById('kk-rr-totals').innerHTML =
       kkState.p.map(p=>`<div class="kk-rr-tot">${p.name}: ${p.totalScore}点</div>`).join('');
     const hist = document.getElementById('kk-rr-history');
@@ -3161,6 +3415,605 @@ function kkNpcDecideKoikoi(pts) {
   if (kkState.npcDiff === 'normal')  return pts < 5 && !kkState.p[1-kkState.npcIdx].koikoi;
   // strong: こいこい宣言は慎重に
   return pts < 8 && !kkState.p[1-kkState.npcIdx].koikoi;
+}
+
+/* ================================================================
+   Firebase 設定
+   ★ご自身のFirebaseプロジェクトの設定値に書き換えてください
+================================================================ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAH4UzQEKAJH9zBb-YrGDJO2InaAqvY1zk",
+  authDomain:        "hanahuda-game.firebaseapp.com",
+  databaseURL:       "https://hanahuda-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "hanahuda-game",
+  storageBucket:     "hanahuda-game.firebasestorage.app",
+  messagingSenderId: "862658961484",
+  appId:             "1:862658961484:web:da18cd2347ba0ce70154e9",
+  measurementId:     "G-NW70TL216L",
+};
+
+/* ================================================================
+   オンライン状態管理
+================================================================ */
+const online = {
+  active:   false,       // オンラインモード中か
+  mode:     null,        // 'koikoi' | 'memory'
+  roomId:   null,        // ルームID (6文字)
+  myIdx:    null,        // 自分のプレイヤーindex (0 or 1)
+  myUid:    null,        // Firebase UID
+  clientId: (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `client-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+  myName:   null,        // 自分の名前
+  visibility: 'public',  // 'public' | 'private'
+  joinMode: 'public',    // 'public' | 'private'
+  period:   12,          // こいこいの期間
+  roomRef:  null,        // Firebase roomRef
+  subscriptions: [],     // Firebase購読一覧
+  fbReady:  false,       // Firebase初期化済みか
+};
+
+let _fbApp = null, _fbDb = null, _fbAuth = null;
+
+async function firebaseInit() {
+  if (online.fbReady) return true;
+  try {
+    if (!_fbApp) {
+      _fbApp   = firebase.initializeApp(FIREBASE_CONFIG);
+      _fbDb    = firebase.database();
+      _fbAuth  = firebase.auth();
+    }
+    const result = await _fbAuth.signInAnonymously();
+    online.myUid = result.user.uid;
+    online.fbReady = true;
+    return true;
+  } catch(e) {
+    console.error('Firebase初期化エラー:', e);
+    alert('Firebase接続に失敗しました。\nFirebase設定を確認してください。\n\n' + e.message);
+    return false;
+  }
+}
+
+function dbRef(path) { return _fbDb.ref(path); }
+
+function onlineSubscribeValue(ref, callback) {
+  ref.on('value', callback);
+  online.subscriptions.push({ ref, callback });
+}
+
+function onlineClearSubscriptions() {
+  online.subscriptions.forEach(({ ref, callback }) => ref.off('value', callback));
+  online.subscriptions = [];
+}
+
+function onlineResetRuntime() {
+  online.active  = false;
+  online.roomRef = null;
+  online.roomId  = null;
+  online.myIdx   = null;
+}
+
+function onlineReturnToSetup(message) {
+  const mode = online.mode;
+  onlineClearSubscriptions();
+  onlineResetRuntime();
+  ALL_SCREENS().forEach(el => el && el.classList.remove('active'));
+  if (mode === 'koikoi') {
+    document.getElementById('koikoi-setup').classList.add('active');
+  } else if (mode === 'memory') {
+    document.getElementById('setup').classList.add('active');
+  } else {
+    homeEl.classList.add('active');
+  }
+  if (message) alert(message);
+}
+
+function onlineListenRoomState() {
+  if (!online.roomRef) return;
+  onlineSubscribeValue(online.roomRef, snap => {
+    const data = snap.val();
+    if (!data) {
+      onlineReturnToSetup('ルームが終了したためオンライン対戦を終了しました。');
+      return;
+    }
+    if (online.active) {
+      const oppIdx = 1 - online.myIdx;
+      if (!data.players || !data.players[oppIdx]) {
+        onlineReturnToSetup('相手が切断したためオンライン対戦を終了しました。');
+      }
+    }
+  });
+}
+
+function onlineCleanup() {
+  const roomRef = online.roomRef;
+  const myIdx = online.myIdx;
+  onlineClearSubscriptions();
+  if (roomRef) {
+    if (myIdx === 0) {
+      // ホストが離脱したらルームを削除
+      roomRef.remove().catch(()=>{});
+    } else if (myIdx === 1) {
+      roomRef.child(`players/${myIdx}`).remove().catch(()=>{});
+    }
+  }
+  onlineResetRuntime();
+}
+
+/* ================================================================
+   ロビー管理
+================================================================ */
+function lobbyOpen(mode, name) {
+  online.mode   = mode;
+  online.myName = name;
+  ALL_SCREENS().forEach(el => el && el.classList.remove('active'));
+  document.getElementById('online-lobby').classList.add('active');
+  document.getElementById('lobby-mode-label').textContent =
+    mode === 'koikoi' ? '🎴 こいこい' : '🧠 神経衰弱';
+  // こいこいのみ期間選択を表示
+  document.getElementById('lobby-period-row').style.display = mode === 'koikoi' ? '' : 'none';
+  lobbyShowTab('create');
+  lobbySetCreateVisibility('public');
+  lobbyShowJoinMode('public');
+  document.getElementById('lobby-name-create').value = name;
+  document.getElementById('lobby-name-join').value   = name;
+  document.getElementById('lobby-create-result').style.display = 'none';
+  document.getElementById('lobby-create-status').textContent = '';
+  document.getElementById('lobby-join-status').textContent = '';
+}
+
+function lobbySetCreateVisibility(visibility) {
+  online.visibility = visibility;
+  document.getElementById('lobby-create-vis-public').classList.toggle('active', visibility === 'public');
+  document.getElementById('lobby-create-vis-private').classList.toggle('active', visibility === 'private');
+}
+
+function lobbyShowJoinMode(mode) {
+  online.joinMode = mode;
+  document.getElementById('lobby-join-mode-public').classList.toggle('active', mode === 'public');
+  document.getElementById('lobby-join-mode-private').classList.toggle('active', mode === 'private');
+  document.getElementById('lobby-join-public-pane').classList.toggle('hidden', mode !== 'public');
+  document.getElementById('lobby-join-private-pane').classList.toggle('hidden', mode !== 'private');
+  const joinTabActive = document.getElementById('lobby-tab-join').classList.contains('active');
+  if (mode === 'public' && joinTabActive) {
+    lobbyStartPublicRoomList();
+  } else if (joinTabActive) {
+    onlineClearSubscriptions();
+  }
+}
+
+function lobbyClose() {
+  onlineCleanup();
+  // 元のセットアップ画面へ戻る
+  ALL_SCREENS().forEach(el => el && el.classList.remove('active'));
+  if (online.mode === 'koikoi') {
+    document.getElementById('koikoi-setup').classList.add('active');
+  } else {
+    document.getElementById('setup').classList.add('active');
+  }
+  online.mode = null;
+}
+
+function lobbyShowTab(tab) {
+  document.getElementById('lobby-tab-create').classList.toggle('active', tab === 'create');
+  document.getElementById('lobby-tab-join').classList.toggle('active',   tab === 'join');
+  document.getElementById('lobby-sec-create').classList.toggle('hidden', tab !== 'create');
+  document.getElementById('lobby-sec-join').classList.toggle('hidden',   tab !== 'join');
+  if (tab === 'join') {
+    lobbyShowJoinMode(online.joinMode);
+  } else if (!online.roomRef) {
+    onlineClearSubscriptions();
+  }
+}
+
+function genRoomId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = '';
+  for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+function lobbyRenderPublicRooms(rooms) {
+  const listEl = document.getElementById('lobby-public-room-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  if (!rooms.length) {
+    listEl.innerHTML = '<div class="lobby-public-empty">現在参加できる公開ルームはありません。</div>';
+    return;
+  }
+  rooms.forEach(room => {
+    const item = document.createElement('div');
+    item.className = 'lobby-public-card';
+    const modeLabel = room.mode === 'koikoi' ? 'こいこい' : '神経衰弱';
+    const periodLabel = room.mode === 'koikoi' ? `${room.period || 12}ヶ月` : '2人対戦';
+    const hostName = room.players?.[0]?.name || 'ホスト';
+    item.innerHTML = `
+      <div class="lobby-public-head">
+        <div class="lobby-public-name">${hostName} のルーム</div>
+        <button class="btn">参加する</button>
+      </div>
+      <div class="lobby-public-meta">
+        <span>${modeLabel}</span>
+        <span>${periodLabel}</span>
+        <span>ID: ${room.roomId}</span>
+      </div>
+    `;
+    item.querySelector('button').addEventListener('click', () => lobbyJoinRoomById(room.roomId));
+    listEl.appendChild(item);
+  });
+}
+
+async function lobbyStartPublicRoomList() {
+  const listEl = document.getElementById('lobby-public-room-list');
+  if (!listEl) return;
+  if (online.roomRef) return;
+  listEl.innerHTML = '<div class="lobby-public-empty">公開ルームを読み込み中...</div>';
+  document.getElementById('lobby-join-status').textContent = '';
+  onlineClearSubscriptions();
+  if (!await firebaseInit()) {
+    listEl.innerHTML = '<div class="lobby-public-empty">Firebase 接続に失敗しました。</div>';
+    return;
+  }
+  const roomsRef = dbRef('rooms');
+  const onRooms = snap => {
+    const raw = snap.val() || {};
+    const rooms = Object.entries(raw)
+      .map(([roomId, data]) => ({ roomId, ...data }))
+      .filter(room =>
+        room.visibility === 'public' &&
+        room.mode === online.mode &&
+        room.status === 'waiting' &&
+        room.players?.[0] &&
+        !room.players?.[1]
+      )
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    lobbyRenderPublicRooms(rooms);
+  };
+  const onError = err => {
+    console.error('公開ルーム一覧の取得に失敗:', err);
+    listEl.innerHTML = '<div class="lobby-public-empty">公開ルーム一覧を取得できませんでした。Firebase Rules で <code>/rooms</code> の読み取りを許可してください。</div>';
+  };
+  roomsRef.on('value', onRooms, onError);
+  online.subscriptions.push({ ref: roomsRef, callback: onRooms });
+}
+
+async function lobbyCreateRoom() {
+  const name = document.getElementById('lobby-name-create').value.trim() || 'プレイヤー1';
+  const period = online.mode === 'koikoi'
+    ? parseInt(document.getElementById('lobby-period').value) || 12
+    : 2;
+  online.myName = name;
+  online.period = period;
+  document.getElementById('lobby-btn-create').disabled = true;
+
+  if (!await firebaseInit()) { document.getElementById('lobby-btn-create').disabled = false; return; }
+
+  onlineClearSubscriptions();
+  const roomId = genRoomId();
+  online.roomId = roomId;
+  online.myIdx  = 0;
+
+  const roomData = {
+    mode:    online.mode,
+    period,
+    visibility: online.visibility,
+    status:  'waiting',
+    createdAt: Date.now(),
+    hostUid: online.myUid,
+    players: {
+      0: { uid: online.myUid, name },
+      1: null,
+    },
+    gameState: null,
+    action:    null,
+  };
+
+  online.roomRef = dbRef(`rooms/${roomId}`);
+  await online.roomRef.set(roomData);
+
+  // 切断時に自動削除
+  online.roomRef.onDisconnect().remove();
+
+  document.getElementById('lobby-room-id-display').textContent = roomId;
+  document.getElementById('lobby-create-status').textContent =
+    online.visibility === 'public' ? '公開ルームとして掲示板に掲載中です。' : '非公開ルームです。IDを共有してください。';
+  document.getElementById('lobby-create-result').style.display = 'block';
+  document.getElementById('lobby-btn-create').disabled = false;
+  lobbyUpdatePlayerList({ 0: { name, uid: online.myUid }, 1: null });
+
+  // 参加者を待つ
+  onlineSubscribeValue(online.roomRef, snap => {
+    const data = snap.val();
+    if (!data) return;
+    lobbyUpdatePlayerList(data.players);
+    if (data.players?.[1] && data.status === 'waiting') {
+      // 両プレイヤー揃ったのでホストがゲーム開始
+      online.roomRef.update({ status: 'starting' }).then(() => {
+        onlineClearSubscriptions();
+        onlineStartGame(data);
+      });
+    } else if (data.status === 'starting' || data.status === 'playing') {
+      onlineClearSubscriptions();
+      onlineStartGame(data);
+    }
+  });
+}
+
+async function lobbyJoinRoomById(roomId) {
+  const name   = document.getElementById('lobby-name-join').value.trim() || 'プレイヤー2';
+  if (roomId.length !== 6) { document.getElementById('lobby-join-status').textContent = 'ルームIDは6文字です'; return; }
+
+  online.myName = name;
+  document.getElementById('lobby-btn-join').disabled = true;
+  document.getElementById('lobby-join-status').textContent = '接続中...';
+
+  if (!await firebaseInit()) { document.getElementById('lobby-btn-join').disabled = false; return; }
+
+  onlineClearSubscriptions();
+  online.roomRef = dbRef(`rooms/${roomId}`);
+  const snap = await online.roomRef.once('value');
+  const data = snap.val();
+
+  if (!data) {
+    document.getElementById('lobby-join-status').textContent = 'ルームが見つかりません';
+    document.getElementById('lobby-btn-join').disabled = false;
+    return;
+  }
+  if (data.status !== 'waiting') {
+    document.getElementById('lobby-join-status').textContent = 'このルームはすでに開始されています';
+    document.getElementById('lobby-btn-join').disabled = false;
+    return;
+  }
+  if (data.players?.[1]) {
+    document.getElementById('lobby-join-status').textContent = 'このルームは満員です';
+    document.getElementById('lobby-btn-join').disabled = false;
+    return;
+  }
+
+  online.roomId = roomId;
+  online.myIdx  = 1;
+  await online.roomRef.child('players/1').set({ uid: online.myUid, name });
+
+  document.getElementById('lobby-join-status').textContent = '参加しました！ホストの開始を待っています...';
+  document.getElementById('lobby-btn-join').disabled = false;
+
+  online.roomRef.child('players/1').onDisconnect().remove();
+
+  // ゲーム開始を待つ
+  onlineSubscribeValue(online.roomRef, snap => {
+    const d = snap.val();
+    if (!d) {
+      onlineReturnToSetup('ルームが終了しました。');
+      return;
+    }
+    if (d.status === 'starting' || d.status === 'playing') {
+      onlineClearSubscriptions();
+      onlineStartGame(d);
+    }
+  });
+}
+
+async function lobbyJoinRoom() {
+  const roomId = document.getElementById('lobby-room-input').value.trim().toUpperCase();
+  await lobbyJoinRoomById(roomId);
+}
+
+async function lobbyCancelRoom() {
+  onlineCleanup();
+  document.getElementById('lobby-create-result').style.display = 'none';
+  document.getElementById('lobby-btn-create').disabled = false;
+}
+
+function lobbyUpdatePlayerList(players) {
+  const el = document.getElementById('lobby-player-list');
+  if (!el) return;
+  el.innerHTML = '';
+  [0, 1].forEach(i => {
+    const p = players?.[i];
+    const item = document.createElement('div');
+    item.className = 'lobby-player-item';
+    item.innerHTML = `
+      <div class="lpi-dot ${p ? 'joined' : 'waiting'}"></div>
+      <span class="lpi-name">${p ? p.name : '待機中...'}</span>
+      ${p && p.uid === online.myUid ? '<span class="lpi-you">（あなた）</span>' : ''}
+    `;
+    el.appendChild(item);
+  });
+}
+
+/* ================================================================
+   オンラインゲーム開始
+================================================================ */
+function onlineStartGame(roomData) {
+  online.active = true;
+  const p0name = roomData.players[0].name;
+  const p1name = roomData.players[1].name;
+
+  if (roomData.mode === 'koikoi') {
+    // こいこいオンライン開始
+    kkState.p[0].name = p0name;
+    kkState.p[1].name = p1name;
+    kkState.p[0].totalScore = 0;
+    kkState.p[1].totalScore = 0;
+    kkState.totalRounds = roomData.period || 12;
+    kkState.round  = 1;
+    kkState.history = [];
+    kkState.lastRoundWinner = null;
+    kkState.oya = Math.random() < 0.5 ? 0 : 1;
+    kkState.npc = false;
+
+    ALL_SCREENS().forEach(el => el && el.classList.remove('active'));
+    document.getElementById('koikoi-game').classList.add('active');
+    onlineListenRoomState();
+
+    if (online.myIdx === 0) {
+      // ホスト：ゲーム状態を生成してFirebaseに書き込む
+      onlineListenKKState();
+      kkStartRound().then(() => {
+        onlinePushKKState();
+      });
+    } else {
+      // ゲスト：Firebaseからゲーム状態を受信して開始
+      online.roomRef.update({ status: 'playing' });
+      onlineListenKKState();
+    }
+  } else {
+    // 神経衰弱オンライン開始
+    state.players = [
+      { name: p0name, collected: [] },
+      { name: p1name, collected: [] },
+    ];
+    memNpc.enabled = false;
+
+    ALL_SCREENS().forEach(el => el && el.classList.remove('active'));
+    gameEl.classList.add('active');
+    onlineListenRoomState();
+
+    if (online.myIdx === 0) {
+      onlineListenMemState();
+      startGame_online().then(() => {
+        onlinePushMemState();
+      });
+    } else {
+      online.roomRef.update({ status: 'playing' });
+      onlineListenMemState();
+    }
+  }
+}
+
+/* ================================================================
+   こいこいオンライン同期
+================================================================ */
+function onlineSerializeKK() {
+  return {
+    p: kkState.p.map(p => ({
+      name: p.name, hand: p.hand, collected: p.collected,
+      totalScore: p.totalScore, koikoi: p.koikoi
+    })),
+    field:           kkState.field,
+    deck:            kkState.deck,
+    round:           kkState.round,
+    totalRounds:     kkState.totalRounds,
+    cur:             kkState.cur,
+    oya:             kkState.oya,
+    lastRoundWinner: kkState.lastRoundWinner,
+    phase:           kkState.phase,
+    selHand:         kkState.selHand,
+    drawnCard:       kkState.drawnCard,
+    matchCands:      kkState.matchCands,
+    prevYaku:        kkState.prevYaku,
+    koikoiBy:        kkState.koikoiBy,
+    history:         kkState.history,
+    updatedBy:       online.clientId,
+    animating:       false,
+  };
+}
+
+function onlineApplyKK(data) {
+  kkState.p            = data.p;
+  kkState.field        = data.field;
+  kkState.deck         = data.deck;
+  kkState.round        = data.round;
+  kkState.totalRounds  = data.totalRounds;
+  kkState.cur          = data.cur;
+  kkState.oya          = data.oya;
+  kkState.lastRoundWinner = data.lastRoundWinner;
+  kkState.phase        = data.phase;
+  kkState.selHand      = data.selHand;
+  kkState.drawnCard    = data.drawnCard;
+  kkState.matchCands   = data.matchCands;
+  kkState.prevYaku     = data.prevYaku;
+  kkState.koikoiBy     = data.koikoiBy;
+  kkState.history      = data.history;
+  kkState.animating    = false;
+}
+
+function onlinePushKKState() {
+  if (!online.active || !online.roomRef) return;
+  online.roomRef.child('gameState').set(onlineSerializeKK()).catch(console.error);
+}
+
+function onlineListenKKState() {
+  onlineSubscribeValue(online.roomRef.child('gameState'), snap => {
+    const data = snap.val();
+    if (!data) return;
+    if (data.updatedBy === online.clientId) return;
+    // 相手のターンの状態を受信して描画
+    onlineApplyKK(data);
+    kkRenderAll();
+    kkSetStatus(`${kkState.p[kkState.cur].name} のターン`);
+    // 受信したフェーズに応じて処理継続
+    if (data.phase === 'field-match-h' || data.phase === 'field-match-d') {
+      // 相手が選択中（こちらは待機）
+    }
+  });
+}
+
+/* ================================================================
+   神経衰弱オンライン同期
+================================================================ */
+async function startGame_online() {
+  // 神経衰弱の初期化（描画のみ、NPCなし）
+  state.currentPlayer = 0;
+  state.flipped       = [];
+  state.animating     = true;
+  state.board = shuffle(CARDS.map(c => c.id)).map(cardId => ({
+    cardId, faceUp: false, collected: false,
+  }));
+  renderBoard();
+  renderPlayerBar();
+  updateRemaining();
+  await sleep(900);
+  setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+  state.animating = false;
+}
+
+function onlineSerializeMem() {
+  return {
+    board:         state.board,
+    currentPlayer: state.currentPlayer,
+    flipped:       state.flipped,
+    players:       state.players.map(p => ({ name: p.name, collected: p.collected })),
+    updatedBy:     online.clientId,
+    animating:     false,
+  };
+}
+
+function onlineApplyMem(data) {
+  state.board         = data.board;
+  state.currentPlayer = data.currentPlayer;
+  state.flipped       = data.flipped;
+  state.players       = data.players;
+  state.animating     = false;
+}
+
+function onlinePushMemState() {
+  if (!online.active || !online.roomRef) return;
+  online.roomRef.child('gameState').set(onlineSerializeMem()).catch(console.error);
+}
+
+function onlineListenMemState() {
+  onlineSubscribeValue(online.roomRef.child('gameState'), snap => {
+    const data = snap.val();
+    if (!data) return;
+    if (data.updatedBy === online.clientId) return;
+    onlineApplyMem(data);
+    renderBoard();
+    renderPlayerBar();
+    updateRemaining();
+    setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+  });
+}
+
+/* ================================================================
+   オンライン: 操作後にFirebaseへ同期するフック
+================================================================ */
+// オンラインモード中か・自分のターンかをチェック
+function onlineIsMyTurn_KK() {
+  return online.active && online.mode === 'koikoi' && kkState.cur === online.myIdx;
+}
+function onlineIsMyTurn_Mem() {
+  return online.active && online.mode === 'memory' && state.currentPlayer === online.myIdx;
 }
 
 </script>

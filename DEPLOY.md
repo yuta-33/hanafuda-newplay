@@ -74,12 +74,16 @@ Netlify → Domain settings → Add custom domain
 ```bash
 cd /Users/sasayuta/Documents/花札
 
-# index.html のみをZIPにまとめる（index.html がルート直下に来るように）
-zip hanafuda-memory.zip index.html
+# 以前のZIPがあれば削除
+rm -f hanafuda-memory.zip
+
+# index.html をルート直下に保ったまま、必要アセットとライセンス文書をまとめる
+zip -r hanafuda-memory.zip index.html assets LICENSE THIRD_PARTY_NOTICES.md
 ```
 
-> **重要**: `zip フォルダ名.zip index.html` とすること。
-> フォルダごとZIPにすると `index.html` がサブフォルダに入り、itch.io で認識されない。
+> **重要**: `index.html` は ZIP のルート直下に置くこと。
+> `assets/` は `index.html` と同じ階層に入っていれば問題ありません。
+> 画像素材を使うため、`assets/` とライセンス文書も一緒に含めてください。
 
 ### itch.io アップロード手順
 

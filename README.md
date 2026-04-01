@@ -28,9 +28,15 @@
 
 ```
 花札/
-├── index.html        # ゲーム本体（HTML/CSS/JS一体）
-├── REQUIREMENTS.md   # 要件定義書
-└── README.md         # 本ファイル
+├── assets/
+│   └── cards/                # 花札カード画像（48枚 + 裏面）
+├── index.html                # ゲーム本体（HTML/CSS/JS一体）
+├── LICENSE                   # コードの MIT License
+├── THIRD_PARTY_NOTICES.md    # 画像素材の帰属・ライセンス
+├── REQUIREMENTS.md           # 要件定義書
+├── RELEASE_CHECKLIST.md      # 公開前確認
+├── itch-description.md       # itch.io 掲載文
+└── README.md                 # 本ファイル
 ```
 
 ## 技術スタック
@@ -58,8 +64,25 @@
 
 ## ライセンス
 
-本ゲームのコードは MIT License に従います。
+### コード
+
+本ゲームのソースコードは MIT License に従います。詳細は [`LICENSE`](LICENSE) を参照してください。
+
+### 画像素材
+
+`assets/cards/` の画像は Wikimedia Commons の「SVG Hanafuda cards」を元に PNG へ変換・調整して使用しています。
+
+- Source: https://commons.wikimedia.org/wiki/Category:SVG_Hanafuda_cards
+- Authors: Louie Mantia / すけじょ
+- License: CC BY-SA 4.0
+- License URL: https://creativecommons.org/licenses/by-sa/4.0/
+
+詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) を参照してください。
+
+### 注記
+
 花札のルール・役名は日本の伝統的なものを使用しています。
+本作は任天堂との提携・公認・監修を受けたものではありません。
 
 ---
 
