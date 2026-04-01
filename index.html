@@ -2192,6 +2192,9 @@ async function onCardClick(idx) {
   flipCardDOM(idx, true);
   memNpcSeeCard(idx); // NPC が見たカードを記憶
 
+  // オンライン: 1枚めくった時点で相手に即時通知
+  if (online.active && online.mode === 'memory') onlinePushMemState();
+
   if (state.flipped.length < 2) return;
 
   // ── 2枚めくり完了 ──
@@ -4018,10 +4021,31 @@ function onlineListenMemState() {
     if (!data) return;
     if (data.updatedBy === online.clientId) return;
     onlineApplyMem(data);
-    renderBoard();
+
+    // 初回のみ DOM を構築、以降は既存要素のクラスだけ更新して CSS アニメを保持
+    if (boardEl.children.length === 0) {
+      renderBoard();
+    } else {
+      state.board.forEach((slot, idx) => {
+        const el = boardEl.querySelector(`.card[data-idx="${idx}"]`);
+        if (!el) return;
+        el.style.animation = 'none'; // dealIn アニメを止める
+        if (slot.collected) {
+          el.classList.add('gone');
+          el.classList.remove('flipped');
+        } else if (slot.faceUp) {
+          el.classList.add('flipped');
+          el.classList.remove('gone', 'match-anim', 'shake');
+        } else {
+          el.classList.remove('flipped', 'gone', 'match-anim', 'shake');
+        }
+      });
+    }
+
     renderPlayerBar();
     updateRemaining();
-    setStatus(`${state.players[state.currentPlayer].name} のターンです`);
+    const isMy = state.currentPlayer === online.myIdx;
+    setStatus(isMy ? 'あなたのターンです' : `${state.players[state.currentPlayer].name} のターン`);
   });
 }
 
