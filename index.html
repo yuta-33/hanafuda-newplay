@@ -9,6 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.local.js"></script>
   <style>
     /* ===========================
        1. CSS変数・リセット
@@ -3421,15 +3422,15 @@ function kkNpcDecideKoikoi(pts) {
    Firebase 設定
    ★ご自身のFirebaseプロジェクトの設定値に書き換えてください
 ================================================================ */
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyAH4UzQEKAJH9zBb-YrGDJO2InaAqvY1zk",
-  authDomain:        "hanahuda-game.firebaseapp.com",
-  databaseURL:       "https://hanahuda-game-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:         "hanahuda-game",
-  storageBucket:     "hanahuda-game.firebasestorage.app",
-  messagingSenderId: "862658961484",
-  appId:             "1:862658961484:web:da18cd2347ba0ce70154e9",
-  measurementId:     "G-NW70TL216L",
+const FIREBASE_CONFIG = window.__FIREBASE_CONFIG__ || {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId:             "YOUR_APP_ID",
+  measurementId:     "YOUR_MEASUREMENT_ID",
 };
 
 /* ================================================================
@@ -3457,6 +3458,10 @@ let _fbApp = null, _fbDb = null, _fbAuth = null;
 
 async function firebaseInit() {
   if (online.fbReady) return true;
+  if (!window.__FIREBASE_CONFIG__) {
+    alert('Firebase設定ファイルが読み込まれていません。\n`firebase-config.local.js` を作成して設定値を入れてください。');
+    return false;
+  }
   try {
     if (!_fbApp) {
       _fbApp   = firebase.initializeApp(FIREBASE_CONFIG);

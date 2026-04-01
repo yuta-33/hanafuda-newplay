@@ -9,3 +9,6 @@ Thumbs.db
 
 # デプロイ用ZIPは除外（手動管理）
 *.zip
+
+# ローカル専用のFirebase設定
+firebase-config.local.js
